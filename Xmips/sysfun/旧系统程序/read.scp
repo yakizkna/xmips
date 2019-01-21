@@ -1,0 +1,16 @@
+0  ~ int 12
+0  ~ 读系统共享 !
+0  ~ ST:systemshare 起始地址
+0  ~ LEN 读取长度
+0  ~  传参区 0~1
+0  ~  系统程序数据 无
+0  LOC ST 0
+0  LOC LEN 1
+0  MOV #11 ST
+1  MOV #12 LEN
+2  SYSR $ $
+3  MOV #10 !0
+4  IRET $ $
+5  END $ $
+
+将读到的内容保存到数据段最后

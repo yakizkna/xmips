@@ -1,0 +1,26 @@
+0  ~ int 11
+0  ~ 数组求和 !
+0  ~ ST(>=5)  起始地址	
+0  ~ LEN 数组长度
+0  ~ SUM 将和加到SUM	
+0  ~ I   数组元素指针
+0  ~ N   计数器
+0  ~  传参区 0~2
+0  ~  系统程序数据 3~4
+0  LOC ST 0
+0  LOC LEN 1
+0  LOC SUM 2
+0  LOC I 3
+0  LOC N 4
+0  MOV N !0
+1  MOV I ST
+2  ADD SUM @I
+3  INC I $
+4  INC N $
+5  CMP N LEN
+6  JB !2 $
+7  MOV #10 !0
+8  IRET $ $
+9  END $ $
+
+SUM的初值有用户给出，不一定是0

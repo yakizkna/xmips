@@ -1,0 +1,12 @@
+头文件
+component.h
+
+C++源文件
+main.cpp
+asm.cpp
+component.cpp
+global.cpp
+tinyOS.cpp
+utility.cpp
+
+用VC++6.0建立包含上述全部文件的工程，编译后放在Xmips系统目录下运行。

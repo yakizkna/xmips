@@ -1,0 +1,16 @@
+0  ~ int 13
+0  ~ 写到系统共享 !
+0  ~ ST:systemshare 起始地址
+0  ~ LEN 写长度
+0  ~  传参区 0~1
+0  ~  系统程序数据 无
+0  LOC ST 0
+0  LOC LEN 1
+0  MOV #11 ST
+1  MOV #12 LEN
+2  SYSW $ $
+3  MOV #10 !0
+4  IRET $ $
+2  END $ $
+
+将数据段最后的内容写到系统共享区

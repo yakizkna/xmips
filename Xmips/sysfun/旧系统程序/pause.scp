@@ -1,0 +1,12 @@
+0  ~ int 19
+0  ~ 停顿 模拟进程调度
+0  ~ 传参区 无
+0  ~ 系统程序数据 无
+0  MOV #10 !2
+0  IRET $ $
+1  END $ $
+
+//mode==2 (iret mode)
+//in fact, i use this to simulate the condition that a process which has run a long time and  
+//has to be swaped to the ready queue, because my processes now are always very short, so i 
+//just simulate the real condition by this way ^_^

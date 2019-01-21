@@ -1,0 +1,9 @@
+DIM SUM 0
+MOV #1 1
+: L1
+ADD SUM #1
+INC #1
+CMP #1 11
+JB L1
+END 
+ 

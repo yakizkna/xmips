@@ -1,0 +1,51 @@
+~  INT10
+~  sysfun:冒泡排序
+~  ST:数组起始地址(ST)>=7
+~  LEN:排序串长度
+~  I:位置a[i]指针
+~  J:位置a[i+1]指针
+~  T:交换存储单元
+~  S:每轮终结单元
+~  ED:数组结束地址  
+~  传参区0~1
+~  系统程序数据2~6
+dim ST 0
+dim LEN 0
+dim I 0
+dim J 0
+dim T 0
+dim S 0
+dim ED 0
+MOV ED ST
+ADD ED LEN
+SUB ED 1
+MOV I ST
+MOV J ST
+INC J
+MOV S ED
+: L2
+CMP @I @J
+JA L1
+~ 交换前后单元
+MOV T @I
+MOV @I @J
+MOV @J T
+: L1
+INC I
+INC J
+CMP I S
+JB L2
+~ 下一轮排序
+MOV I ST
+MOV J ST
+INC J
+SUB S 1
+CMP S 0
+JNE L2
+~ 排序结束中断返回
+MOV #10 0
+IRET
+END
+
+
+
