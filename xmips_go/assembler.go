@@ -86,6 +86,10 @@ func (a *Assembler) trans(op string, line int) int {
 		return 960000
 	case "STI", "sti":
 		return 960100
+	case "PRINT", "print":
+		return 970021
+	case "PRINTC", "printc":
+		return 970121
 	case "HALT", "halt":
 		return 800000
 	case "~":

@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 // Interpreter 解释执行器，对应 C++ 的 interpreter 类
 type Interpreter struct {
 	ID          int
@@ -304,6 +306,10 @@ func (im *Interpreter) exer(proc *Process) int {
 		case 960100: // STI
 			proc.interrupt = 0
 			proc.update = 1
+		case 970021: // PRINT — 输出整数到 stdout
+			fmt.Printf("%d\n", im.GM.mem[15])
+		case 970121: // PRINTC — 输出字符到 stdout
+			fmt.Printf("%c", im.GM.mem[15])
 		}
 
 		// 写回目的操作数
