@@ -4,6 +4,7 @@ xmips_go/Xmips/xmips
 
 # 运行生成的字符码文件（.co）
 xmips_go/Xmips/*.co
+xmips_go/Xmips/file/*.co
 
 # 运行生成的日志目录（dump.log 等）
 xmips_go/Xmips/log/
