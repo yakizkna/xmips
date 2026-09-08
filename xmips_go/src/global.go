@@ -116,6 +116,10 @@ var sysFunTable = [10]string{
 	"",
 }
 
+// runDir Xmips 运行根目录（可执行文件所在目录）。config.ini、sysfun/file 目录、
+// 虚拟磁盘 diskRoot 均以此为基准，使 `xmips XXX.cupa` 可从任意目录直接运行
+var runDir = ""
+
 var sysPath = [2]string{
 	"./sysfun/",
 	"./file/",
@@ -129,7 +133,7 @@ var reportLevel = 0 // 0 report Error, 1 report Normal and Error, 2 report all
 
 var delayMode = 0 // 0 不延时, 1 延时
 
-var updateSysfun = 1 // 0 不重新汇编系统函数, 1 重新汇编
+var updateSysfun = 0 // 碳由历史保留：普通运行直接 Load .co；重建系统库请用 `./xmips update`
 
 // config.ini 可配置的系统参数（默认值与代码原硬编码一致）
 var codeSize = 800       // 用户进程代码区长度（字）
@@ -144,7 +148,8 @@ var pcbNum = 40          // PCB 数量：系统最大并发进程数
 // wordBits 机器字长（位）：32 或 64。决定通用寄存器与内存中整数的有效位数与进位行为
 var wordBits = 64
 
-// diskRoot 虚拟磁盘目录（相对运行目录）。文件 open 的路径强制限定在此目录内
+// diskRoot 为 config.ini 中的预留配置项。文件系统 open 目前直接读写真实宿主文件
+// （相对当前工作目录或绝对路径），不再强制限定在 disk/ 目录内
 var diskRoot = "disk"
 
 // sockTimeout socket connect/write 超时（毫秒）

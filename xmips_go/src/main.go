@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
-// config 读取系统配置文件 config.ini
+// config 读取系统配置文件 config.ini（位于运行根目录 runDir）
 func config() int {
-	f, err := os.Open("config.ini")
+	f, err := os.Open(filepath.Join(runDir, "config.ini"))
 	if err != nil {
 		return -1
 	}
@@ -38,8 +39,6 @@ func config() int {
 			displayMode = r
 		case "reportLevel":
 			reportLevel = r
-		case "updateSysfun":
-			updateSysfun = r
 		case "codeSize":
 			if r > 0 {
 				codeSize = r
@@ -121,9 +120,52 @@ func osOpen(path string) (*os.File, int) {
 	return f, 0
 }
 
+// rebuildSysfun 重新汇编所有 .scp 系统函数，生成对应的 .co 文件；返回成功条数
+func rebuildSysfun(e *Editor, a *Assembler, sys *Storage) int {
+	cnt := 0
+	for i := 0; i < sysFunNumber; i++ {
+		if sysFunTable[i] == "" {
+			continue
+		}
+		fp, ret := sys.getFile(sysFunTable[i], 0)
+		if ret == 0 {
+			if e.ASM(fp, a, sysFunTable[i]) != -1 {
+				cnt++
+			}
+			sys.releaseFile(fp)
+		}
+	}
+	return cnt
+}
+
 func main() {
+	// 运行根目录 = 可执行文件所在目录，使 `xmips XXX.cupa` 可从任意目录直接运行，
+	// 而 config.ini / sysfun / file / disk 均自动定位到 Xmips 运行目录
+	if exe, err := os.Executable(); err == nil {
+		if abs, aerr := filepath.Abs(exe); aerr == nil {
+			runDir = filepath.Dir(abs)
+		}
+	}
+	if runDir == "" {
+		runDir, _ = os.Getwd()
+	}
+
+	// 系统目录基于 runDir（原相对 "./sysfun/"、"./file/" 随 cwd 变化，改为固定到运行目录）
+	sysPath[0] = filepath.Join(runDir, "sysfun") + string(filepath.Separator)
+	sysPath[1] = filepath.Join(runDir, "file") + string(filepath.Separator)
+
 	if config() != 0 {
 		fmt.Println("system parameters config error!")
+	}
+
+	// 独立命令：./xmips update → 重建系统函数库（重新汇编 sysfun/*.scp 生成 .co）
+	if len(os.Args) >= 2 && os.Args[1] == "update" {
+		ue := newEditor(103, sysfunCodeSize, sysfunDataSize)
+		ua := newAssembler(102)
+		usys := newStorage(106, sysPath[0])
+		cnt := rebuildSysfun(ue, ua, usys)
+		fmt.Printf("system functions rebuilt: %d\n", cnt)
+		return
 	}
 
 	// 构建硬件/系统对象
@@ -200,9 +242,15 @@ func main() {
 			var pfr *os.File
 			var ret int
 			if strings.ContainsAny(prog, `/\`) {
+				// 带路径分隔符 → 直接按该路径打开（相对当前目录或绝对路径）
 				pfr, ret = osOpen(prog)
 			} else {
-				pfr, ret = disk.getFile(prog, 0)
+				// 仅文件名 → 优先当前目录，其次 Xmips 运行目录的 file/ 目录
+				if f, err := os.Open(prog); err == nil {
+					pfr, ret = f, 0
+				} else {
+					pfr, ret = disk.getFile(prog, 0)
+				}
 			}
 			if ret != 0 {
 				fmt.Printf("cannot open %s\n", prog)

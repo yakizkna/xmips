@@ -377,7 +377,7 @@ MOV #0 #13      ~ #13=1 表示缓冲区满，可再次 INT 14 继续读
 |---------|------|
 | `sock:host:port` | TCP 客户端连接；**端口 443 自动启用 TLS** |
 | `tlssock:host:port` | TCP 客户端连接，**强制 TLS**（`ServerName`=host，握手受 `sockTimeout` 约束） |
-| 其它 | 文件，映射到虚拟磁盘 `diskRoot` 目录内（路径清洗，拒绝 `..` 越界） |
+| 其它 | 文件，映射到**真实宿主文件**：`#11` 为文件路径（相对当前工作目录或绝对路径），直接读写；`sock:`/`tlssock:` 为 TCP 客户端（`sock:443` 或 `tlssock:` 自动启用 TLS） |
 
 `#12` 模式：0=只读，1=写（截断），2=读写追加（文件有效）。返回 fd 存 `#9`（fd 从 3 起）。读写网络/文件的字节流：`INT 16` 从 `#9` 读 `#12` 字节存入 `#11` 指向的数据段；`INT 17` 把 `#11` 处 `#12` 字节写入 `#9`。Cupa 可据此实现真正的 **HTTPS 抓取 + 写文件**（例见 `file/NETTOUR.cupa`）。
 
@@ -505,7 +505,7 @@ xmips/
 │   │   ├── file/                # 用户程序目录
 │   │   │   └── run.list         # 运行列表文件
 │   │   └── sysfun/              # 系统函数库目录（用户不可修改）
-│   └── 使用说明.txt             # 开机运行与参数说明
+│   └── USAGE.md                  # 开机运行与参数说明
 └── xmips_legacy_cpp/            # 旧版 C++ 项目（原 Xmips.exe 实现）
     ├── src/                     # C++ 源码（component.cpp、asm.cpp、tinyOS.cpp ...）
     └── Xmips/                   # 旧版运行目录（Xmips.exe、config.ini、file/、sysfun/）
@@ -541,8 +541,7 @@ end
 | reportLevel | 0 | 显示警告和错误信息 |
 | reportLevel | 1 | 显示主要运行状况 + 警告 + 错误 |
 | reportLevel | 2 | 显示全部信息 |
-| updateSysfun | 0 | 不重新汇编系统函数库 |
-| updateSysfun | 1 | 重新汇编系统函数库 |
+| updateSysfun | — | 已由独立命令 `./xmips update` 取代（重建系统函数库，生成 .co） |
 | codeSize | 800 | 用户进程代码区长度（int整型） |
 | dataSize | 200 | 用户进程数据区长度（int整型） |
 | stackSize | 50 | 用户进程栈区长度（int整型） |
@@ -561,14 +560,25 @@ config.ini 格式要求：每行 `key=value`（无空格），以 `end` 结尾�
 
 ### 6.3 运行 Xmips
 
-Go 复刻版编译并运行方式（详见 `xmips_go/使用说明.txt`）：
+Go 复刻版编译并运行方式（详见 [`xmips_go/USAGE.md`](xmips_go/USAGE.md)）：
 
 ```
 cd xmips_go
-./build.sh            # 1. 编译 src/ 并将可执行文件拷贝到 Xmips/
-cd Xmips
-./xmips_go            # 2. 从运行目录启动（需在 Xmips/ 下执行）
+./build.sh            # 1. 编译 src/ 并将可执行文件拷贝到 Xmips/xmips
 ```
+
+运行（**可从任意目录直接调用**，运行根目录 = 可执行文件所在目录）：
+
+```
+cd Xmips && ./xmips            # A. 无参数 → 从 file/run.list 读取要运行的程序
+./xmips XXX.cupa               # B. 指定程序：优先当前目录，其次 Xmips/file/ 目录
+./xmips /绝对/路径/XXX.cupa     # C. 指定程序的绝对/相对路径
+./xmips update                 # D. 重建系统函数库（重汇编 sysfun/*.scp 生成 .co）
+```
+
+- `config.ini`、`file/`、`sysfun/` 均自动定位到 **可执行文件所在目录**（即 `Xmips/`），与当前工作目录无关，因此无需 `cd Xmips` 即可直接运行；
+- 用户程序 open 的文件为**真实宿主文件**（相对当前工作目录或绝对路径），可直接读写主机任意路径；
+- 建议将 `Xmips/xmips`（或其符号链接）加入 `PATH`，即可在任何目录 `xmips XXX.cupa`。
 
 运行后系统输出依次为：
 1. 系统函数库的汇编源程序

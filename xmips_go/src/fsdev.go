@@ -47,14 +47,10 @@ func errCheck(res int) {
 	}
 }
 
-// cleanPath 将相对文件路径清洗并限定在 diskRoot 内；越界/非法返回空串
+// cleanPath 清理用户提供的文件路径：仅拒绝空/纯点路径，允许读写任意真实主机文件（相对当前目录或绝对路径）
 func cleanPath(p string) string {
 	clean := filepath.Clean(strings.ReplaceAll(p, "\\", "/"))
-	if filepath.IsAbs(clean) {
-		return ""
-	}
-	// 目录穿越到 diskRoot 之外（含根目录）视为非法
-	if clean == ".." || strings.HasPrefix(clean, "../") {
+	if clean == "" || clean == "." {
 		return ""
 	}
 	return clean
@@ -124,20 +120,14 @@ func (f *FsDev) fsOpen(pptr *Process, pathPtr, mode int) int {
 		return fd
 	}
 
-	// 文件：限定在 diskRoot 内
+	// 文件：直接读写真实主机文件（相对当前工作目录或绝对路径）
 	p := cleanPath(path)
 	if p == "" {
 		errCheck(200)
 		f.table[fd].used = false
 		return -1
 	}
-	// 确保 diskRoot 目录存在
-	if err := os.MkdirAll(diskRoot, 0o755); err != nil {
-		errCheck(200)
-		f.table[fd].used = false
-		return -1
-	}
-	full := filepath.Join(diskRoot, p)
+	full := p
 
 	var flag int
 	switch mode {
