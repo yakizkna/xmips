@@ -1,16 +1,8 @@
 package main
 
-import (
-	"bufio"
-	"fmt"
-	"os"
-)
-
-// I/O 寄存器编号（占用 GM 中的预留寄存器）
-const outputReg = 13 // #13: 输出寄存器，写入即输出字符到 stdout
-const inputReg = 14  // #14: 输入寄存器，读取即从 stdin 读入字符（EOF 返回 0）
-
-var stdinReader = bufio.NewReader(os.Stdin)
+// I/O 寄存器编号（占用 GM 中的预留寄存器，通过系统调用访问）
+const outputReg = 13 // #13: 输出寄存器
+const inputReg = 14  // #14: 输入寄存器
 
 // Interpreter 解释执行器，对应 C++ 的 interpreter 类
 type Interpreter struct {
@@ -172,17 +164,7 @@ func (im *Interpreter) exer(proc *Process) int {
 			im.GM.mem[15] = im.GM.mem[im.MRgst.read(2)]
 		}
 		if im.MRgst.read(5) == 1 {
-			if im.MRgst.read(4) == inputReg {
-				// 从 stdin 读入一个字符，EOF 返回 0
-				b, err := stdinReader.ReadByte()
-				if err != nil {
-					im.GM.mem[16] = 0
-				} else {
-					im.GM.mem[16] = int(b)
-				}
-			} else {
-				im.GM.mem[16] = im.GM.mem[im.MRgst.read(4)]
-			}
+			im.GM.mem[16] = im.GM.mem[im.MRgst.read(4)]
 		}
 		if im.MRgst.read(3) == 2 {
 			im.GM.mem[15] = im.MRgst.read(2)
@@ -334,10 +316,6 @@ func (im *Interpreter) exer(proc *Process) int {
 		}
 		if tmp_dataLS == 1 && im.MRgst.read(3) == 1 {
 			im.GM.mem[im.MRgst.read(2)] = im.GM.mem[15]
-			// 输出寄存器拦截：写结果到 #13 时，输出字符到 stdout
-			if im.MRgst.read(2) == outputReg {
-				fmt.Printf("%c", im.GM.mem[15])
-			}
 		}
 
 		im.load(im.MRgst, 0, proc.MCode, im.PC)
