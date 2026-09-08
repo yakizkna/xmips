@@ -1,0 +1,102 @@
+~ ============================================
+~ BUBBLE_CALL.cupa —— CALL 版本：对数组 SET 做冒泡排序并输出
+~ 与原版 BUBBLE_INT.cupa（用 INT 10 系统函数）等价。
+~ 冒泡排序(BUBBLE)与数字输出(PRINUM)均为 CALL 用户子程序。
+~ 约定：
+~   1) 代码从地址 0 开始执行，故主程序必须放在文件最前（DIM 之后）；
+~   2) 汇编在“第一个 END”终止，且主程序在开头，因此全文件只能有一个 END（末尾）；
+~   3) 子程序放主程序之后，靠 CALL 前向引用其标签（回填两遍，同前向跳转）。
+~ 寄存器传参约定（无栈帧，靠约定）：#0=数组首地址，#1=数组长度
+~ ============================================
+DIM SET D10  2,4,51,13,17,40,5,22,3,16;
+DIM SC  D2    ~ SC[0]=字符  SC[1]=0 字符串终止
+DIM BUF D16   ~ PRINUM 的十进制字符缓冲
+
+~ ---------- 主程序（code 0 起，含全部逻辑） ----------
+MOV #0 0       ~ 数组首地址（数据段 0）
+MOV #1 10      ~ 数组长度
+CALL BUBBLE    ~ 冒泡排序（结果写回 SET）
+
+~ 逐个输出元素
+MOV #2 0       ~ #2 作数组元素地址指针 = SET 首地址
+: OUTLOOP
+MOV #0 @#2     ~ #0 = SET[*#2]
+CALL PRINUM    ~ 输出该数字
+MOV SC 32      ~ 输出一个空格
+MOV #11 10
+MOV #10 13
+INT
+INC #2
+CMP #2 10
+JB OUTLOOP
+MOV SC 10      ~ 末尾输出换行
+MOV #11 10
+MOV #10 13
+INT
+HALT           ~ 主程序结束（用 HALT 而非 END：END 会终止汇编，导致子程序无法汇编）
+
+~ ---------- PRINUM 子程序（RET 返回） ----------
+~ 参数：入口时 #0 为要打印的整数；拼接十进制串到 BUF 并用 INT 13 输出
+: PRINUM
+  MOV #8 #0      ~ #8 = num 工作副本（DIV 余数会写入 #0，避免用 #0 作除数目标）
+  MOV #6 12      ~ #6 = BUF 地址
+  CMP #8 0
+  JNE P1
+  MOV @#6 48     ~ num==0，直接输出 '0'
+  INC #6
+  MOV @#6 0
+  JMP PP
+: P1
+  MOV #7 0       ~ #7 统计入栈位数
+: PDIV
+  MOV #3 #8
+  MOD #3 10      ~ 取最低位
+  PUSH #3
+  INC #7
+  DIV #8 10      ~ num /= 10（商→#8，余数→#0，无碍）
+  CMP #8 0
+  JNE PDIV
+: PNUM
+  POP #3
+  ADD #3 48      ~ 转 ascii '0'..'9'
+  MOV @#6 #3
+  INC #6
+  SUB #7 1
+  CMP #7 0
+  JA PNUM
+  MOV @#6 0      ~ 字符串终止0
+: PP
+  MOV #11 12     ~ 用 INT 13 输出 BUF 字符串
+  MOV #10 13
+  INT
+  RET
+
+~ ---------- BUBBLE 子程序（RET 返回） ----------
+~ 参数：#0=数组首地址，#1=数组长度。降序排序（与 INT_10.scp 一致）
+: BUBBLE
+  MOV #4 #0
+  ADD #4 #1
+  SUB #4 1      ~ #4 = 数组末尾地址 a+n-1
+  MOV #3 #4     ~ #3 = 本轮结束地址（round end）
+  MOV #5 #0     ~ #5 = a[i] 指针
+  MOV #6 #0
+  INC #6        ~ #6 = a[i+1] 指针
+: L2
+  CMP @#5 @#6
+  JA L1         ~ a[i] > a[i+1] 则已就位，跳过交换
+  MOV #2 @#5    ~ 交换 a[i] 与 a[i+1]
+  MOV @#5 @#6
+  MOV @#6 #2
+: L1
+  INC #5
+  INC #6
+  CMP #5 #3
+  JB L2
+  MOV #5 #0
+  MOV #6 #0
+  INC #6
+  SUB #3 1
+  CMP #3 0
+  JNE L2
+  RET
+END
