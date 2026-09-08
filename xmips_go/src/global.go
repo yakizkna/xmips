@@ -104,11 +104,11 @@ var sysLog = [100]abendNote{
 var sysFunNumber = 5 // 系统函数数量（索引 0-4 → INT 10-14）
 
 var sysFunTable = [10]string{
-	"INT_10.scp", // index 0 → INT 10: 冒泡排序
+	"INT_10.scp", // index 0 → INT 10: 冒泡排序（.scp 系统函数）
 	"",           // index 1 → INT 11: (保留)
 	"",           // index 2 → INT 12: (保留)
-	"INT_13.scp", // index 3 → INT 13: 输出
-	"INT_14.scp", // index 4 → INT 14: 输入
+	"",           // index 3 → INT 13: 输出字符串（dispatcher 原生，无 .scp）
+	"",           // index 4 → INT 14: 输入缓冲（dispatcher 原生，无 .scp）
 	"",
 	"",
 	"",

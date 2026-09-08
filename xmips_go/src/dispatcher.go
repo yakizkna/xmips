@@ -320,6 +320,46 @@ func (d *Dispatcher) swap2(im *Interpreter) int {
 			}
 			r = 1
 
+		case 13: // INT 13 输出字符串（dispatcher 原生，无 .scp）
+			// 从调用者数据段 #11 处读到 0，逐字符输出到 stdout
+			addr := im.GM.read(11)
+			for {
+				c := d.runb.pptr.MData.read(addr)
+				if c == 0 || c < 0 {
+					break
+				}
+				printf("%c", rune(byte(c)))
+				addr++
+			}
+			d.readyb.insertToHead(d.runb)
+			r = 1
+
+		case 14: // INT 14 输入到缓冲区（dispatcher 原生，无 .scp）
+			// 从 stdin 读字符存入调用者数据段 #11 起的缓冲，最多 #12 个；
+			// 返回标志写回 #13 槽：#13=0 读到 EOF，#13=1 缓冲区满（可再 INT 14 继续读）
+			base := im.GM.read(11)
+			size := im.GM.read(12)
+			n := 0
+			flag := 1 // 默认：缓冲满
+			for n < size {
+				b, err := stdinReader.ReadByte()
+				if err != nil {
+					flag = 0 // EOF
+					break
+				}
+				d.runb.pptr.MData.write(base+n, int(b))
+				n++
+			}
+			// 写回 #13 槽（sp-4），INT 恢复现场时回到 GM[13]
+			d.runb.pptr.S.write(d.runb.pptr.S.SP-(17-13), flag)
+			d.readyb.insertToHead(d.runb)
+			RES = 205
+			if systemChecker.showLevel(RES, sysLog[:]) {
+				printf("D%-5d caller process ID:%d, INT14 input, size:%d flag:%d ", d.ID, d.runb.ID, size, flag)
+				systemChecker.check(RES, sysLog[:])
+			}
+			r = 1
+
 		default: // system call (r >= 10)
 			RES = 173
 			if systemChecker.showLevel(RES, sysLog[:]) {

@@ -9,7 +9,7 @@
 ## 1. 背景与既定约束
 
 ### 1.1 现状
-- 系统调用：用户 `MOV #10 调用号; INT`，dispatcher 按 `r-10` 处理。现有 `INT 13`(输出串)/`INT 14`(输入缓冲) 为 `.scp` 系统函数。
+- 系统调用：用户 `MOV #10 调用号; INT`，dispatcher 按 `r-10` 处理。现有 `INT 13`(输出串)/`INT 14`(输入缓冲) 亦由 **dispatcher 原生执行**（原为 `.scp`，已改造，见 §2 注）。仅 `INT 10`（冒泡排序）仍为 `.scp` 系统函数。
 - 原生 syscall 先例：`SYSR/SYSW/WAKE/SET` 由 dispatcher 在 `swap2` 的 `case 5/6/7` 直接执行（不建系统函数进程）。
 - 关键约束：`INT` 把调用者 `#0~#14`、PC、flag 压栈，恢复时从栈弹出。**因此 dispatcher 原生 syscall 的返回值必须写进调用者栈的 `#13` 槽位**（复用 `case 3` 的 `up()` 写回：`S.write(sp-4, #13)`），写在 GM 寄存器会被覆盖。
 - `.scp`（ABC 汇编）只能寻址 `#0~#14`，够不到 `#15~#19`。这是放弃 `.scp` 于本功能的主因。
@@ -182,7 +182,7 @@ config.ini 新增：
 | `Xmips/config.ini` | 新增 §6 配置项 |
 | `README.md` / `使用说明.txt` | 补系统调用表（15~18）、TLS、虚拟磁盘、阻塞/超时/让出说明 |
 
-`assembler.go`、`interpreter.go`、`sysfun/INT_xx.scp` **均无需改动**（无新 opcode、无通道寄存器、无新系统函数）。
+`assembler.go`、`interpreter.go` **无需改动上的新增 opcode/系统函数需求**；`sysfun/INT_xx.scp` **仅 `INT_10.scp`**（冒泡排序）保留，`INT_13.scp`/`INT_14.scp` 已删除（改由 dispatcher 原生执行）。
 
 ---
 
