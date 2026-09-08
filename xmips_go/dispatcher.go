@@ -276,20 +276,19 @@ func (d *Dispatcher) swap2(im *Interpreter) int {
 			}
 			r = 1
 
-		case 11: // INT 11 — 输出：读 #13，输出字符到 stdout
+		case 13: // INT 13 — 输出：读 #13，输出字符到 stdout
 			sp := d.runb.pptr.S.SP
-			// 栈布局: [GM0..GM14, PC, flag]，#13 在 SP-4
 			ch := d.runb.pptr.S.read(sp - 4)
 			fmt.Printf("%c", ch)
 			d.readyb.insertToHead(d.runb)
 			RES = 188
 			if systemChecker.showLevel(RES, sysLog[:]) {
-				printf("D%-5d process ID:%d, INT 11 output", d.ID, d.runb.ID)
+				printf("D%-5d process ID:%d, INT 13 output", d.ID, d.runb.ID)
 				systemChecker.check(RES, sysLog[:])
 			}
 			r = 1
 
-		case 12: // INT 12 — 输入：从 stdin 读字符到 #14，EOF 返回 0
+		case 14: // INT 14 — 输入：从 stdin 读字符到 #14，EOF 返回 0
 			sp := d.runb.pptr.S.SP
 			b, err := stdinReader.ReadByte()
 			if err != nil {
@@ -300,7 +299,7 @@ func (d *Dispatcher) swap2(im *Interpreter) int {
 			d.readyb.insertToHead(d.runb)
 			RES = 188
 			if systemChecker.showLevel(RES, sysLog[:]) {
-				printf("D%-5d process ID:%d, INT 12 input", d.ID, d.runb.ID)
+				printf("D%-5d process ID:%d, INT 14 input", d.ID, d.runb.ID)
 				systemChecker.check(RES, sysLog[:])
 			}
 			r = 1
