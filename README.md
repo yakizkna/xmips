@@ -465,18 +465,26 @@ SUM 的字符码文件：
 
 ### 6.1 路径设置和参数配置
 
-**目录结构**：
+**仓库目录结构**：
 
 ```
-Xmips/
-├── Xmips.exe       # 可执行文件
-├── config.ini      # 配置文件
-├── file/           # 用户程序目录
-│   └── run.list    # 运行列表文件
-└── sysfun/         # 系统函数库目录（用户不可修改）
+xmips/
+├── xmips_go/                    # Go 复刻版（当前推荐使用）
+│   ├── src/                     # Go 源代码（main.go、dispatcher.go、interpreter.go ...）
+│   ├── build.sh                 # 编译并拷贝可执行文件到 Xmips/ 运行目录
+│   ├── Xmips/                   # 运行目录
+│   │   ├── xmips_go             # 可执行文件（build.sh 生成）
+│   │   ├── config.ini           # 配置文件
+│   │   ├── file/                # 用户程序目录
+│   │   │   └── run.list         # 运行列表文件
+│   │   └── sysfun/              # 系统函数库目录（用户不可修改）
+│   └── 使用说明.txt             # 开机运行与参数说明
+└── xmips_legacy_cpp/            # 旧版 C++ 项目（原 Xmips.exe 实现）
+    ├── src/                     # C++ 源码（component.cpp、asm.cpp、tinyOS.cpp ...）
+    └── Xmips/                   # 旧版运行目录（Xmips.exe、config.ini、file/、sysfun/）
 ```
 
-**系统函数库**：`sysfun/` 下的系统调用源文件统一命名为 `INT_xx.scp`，其中 `xx` 为调用号（对应 #10 中的值）。当前内置的系统函数：
+**系统函数库**：`xmips_go/Xmips/sysfun/`（旧版在 `xmips_legacy_cpp/Xmips/sysfun/`）下的系统调用源文件统一命名为 `INT_xx.scp`，其中 `xx` 为调用号（对应 #10 中的值）。当前内置的系统函数：
 
 | 文件 | 调用号 | 功能 |
 |------|--------|------|
@@ -520,9 +528,18 @@ config.ini 格式要求：每行 `key=value`（无空格），以 `end` 结尾�
 
 ### 6.2 编辑汇编源程序
 
-用户源程序必须建立在 `file/` 目录下，以 `END` 语句结尾。
+用户源程序必须建立在 `xmips_go/Xmips/file/` 目录下，以 `END` 语句结尾（旧版为 `xmips_legacy_cpp/Xmips/file/`）。
 
 ### 6.3 运行 Xmips
+
+Go 复刻版编译并运行方式（详见 `xmips_go/使用说明.txt`）：
+
+```
+cd xmips_go
+./build.sh            # 1. 编译 src/ 并将可执行文件拷贝到 Xmips/
+cd Xmips
+./xmips_go            # 2. 从运行目录启动（需在 Xmips/ 下执行）
+```
 
 运行后系统输出依次为：
 1. 系统函数库的汇编源程序
