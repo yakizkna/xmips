@@ -135,6 +135,68 @@ var sysfunStackSize = 40 // 系统函数栈区长度（字）
 var cycleTimes = 30      // 时间片大小：每个时间片最多执行的指令数
 var pcbNum = 40          // PCB 数量：系统最大并发进程数
 
+// wordBits 机器字长（位）：32 或 64。决定通用寄存器与内存中整数的有效位数与进位行为
+var wordBits = 64
+
+// truncWord 将任意 int 截断为当前机器字长，返回带符号表示
+// - 64 位：Go int 本身即 64 位带符号，直接返回
+// - 32 位：取低 32 位并按 32 位带符号解释（等价于 C 的 int 溢出回绕）
+func truncWord(v int) int {
+	if wordBits == 32 {
+		return int(int32(uint32(v)))
+	}
+	return v
+}
+
+// 位移与循环移位，均按当前机器字长（wordBits）运算
+func shiftL(v, c int) int {
+	if wordBits == 32 {
+		return int(int32(uint32(v) << uint(c&31)))
+	}
+	return int(uint64(v) << uint(c&63))
+}
+
+func shiftR(v, c int) int {
+	if wordBits == 32 {
+		return int(int32(uint32(v) >> uint(c&31)))
+	}
+	return int(uint64(v) >> uint(c&63))
+}
+
+func rotL(v, c int) int {
+	if wordBits == 32 {
+		k := uint(c & 31)
+		u := uint32(v)
+		if k == 0 {
+			return int(int32(u))
+		}
+		return int(int32(u<<k | u>>(32-k)))
+	}
+	k := uint(c & 63)
+	u := uint64(v)
+	if k == 0 {
+		return int(u)
+	}
+	return int(u<<k | u>>(64-k))
+}
+
+func rotR(v, c int) int {
+	if wordBits == 32 {
+		k := uint(c & 31)
+		u := uint32(v)
+		if k == 0 {
+			return int(int32(u))
+		}
+		return int(int32(u>>k | u<<(32-k)))
+	}
+	k := uint(c & 63)
+	u := uint64(v)
+	if k == 0 {
+		return int(u)
+	}
+	return int(u>>k | u<<(64-k))
+}
+
 // procDelay 在 interpreter 的 load/store/push/pop 等操作中使用
 func procDelay(mode int, timeMs int) {
 	if mode == 1 {

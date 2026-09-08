@@ -72,6 +72,10 @@ func config() int {
 			if r > 0 {
 				pcbNum = r
 			}
+		case "bitMode":
+			if r == 32 || r == 64 {
+				wordBits = r
+			}
 		}
 	}
 	return 0

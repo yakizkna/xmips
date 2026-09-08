@@ -1,30 +1,40 @@
 ~ Greet
-~ 输出提示，读入名字，输出 "hello, 名字!"
-~ 数据段: MSG@0, NAME@20, MSG2@60, MSG3@70
-DIM MSG D20 105,110,112,117,116,32,121,111,117,114,32,110,97,109,101,58,10,0;
+~ 输出提示，读入名字（逐字符读入，遇回车(10)或EOF(0)结束），输出 "hello, 名字!"
+~ 数据段: MSG@0, NAME@20, MSG2@60, MSG3@70, TEMP@73(读入槽)
+~ 读名字采用“每次读 1 个字符”（INT 14 的 #12=1），逐个判断是否回车，
+~ 回车即结束本次输入，避免一次读完输入流时因 EOF 未到而阻塞等待。
+DIM MSG D20 105,110,112,117,116,32,121,111,117,114,32,110,97,109,101,58,32,0;
 MOV #11 0
 MOV #10 13
 INT
 DIM NAME D40
-MOV #11 20
-MOV #12 40
+MOV #1 20         ~ #1: 名字的存储指针（NAME 起始地址）
+MOV #12 1         ~ INT 14 每次只读 1 个字符
+: READLP
+MOV #11 73        ~ 读入槽：TEMP 单元（INT 14 返回后 #11 会恢复）
 MOV #10 14
 INT
-~ 去掉 NAME 中结尾换行(10)，替换为 0 结束符
-MOV #1 0
-: TRIM
-MOV #0 &1NAME
+MOV #0 #13        ~ #13: 0=EOF, 1=读到字符
+MOV #2 1
+CMP #0 #2
+JNE RDONE         ~ EOF，结束
+MOV #0 @#11       ~ 取出刚读入的字符（来自 TEMP）
 MOV #2 10
 CMP #0 #2
-JE FOUND_NL
-MOV #2 0
-CMP #0 #2
-JE TRIM_END
+JE RDONE          ~ 是回车，结束
+MOV #2 60
+CMP #1 #2
+JE FULL          ~ 名字已满 40 字符，结束
+MOV @#1 #0       ~ 存入名字缓冲区
 INC #1
-JMP TRIM
-: FOUND_NL
-MOV &1NAME 0
-: TRIM_END
+JMP READLP
+: FULL
+MOV #1 59        ~ 已存满 40 个字符，终止符落在最后一个位置
+MOV @#1 0
+JMP OUTPUT
+: RDONE
+MOV @#1 0        ~ 名字末尾写 0 结束符
+: OUTPUT
 DIM MSG2 D10 10,104,101,108,108,111,44,32,0;
 MOV #11 60
 MOV #10 13
@@ -33,6 +43,7 @@ MOV #11 20
 MOV #10 13
 INT
 DIM MSG3 D3 33,10,0;
+DIM TEMP D1
 MOV #11 70
 MOV #10 13
 INT

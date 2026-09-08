@@ -36,6 +36,14 @@ func (a *Assembler) trans(op string, line int) int {
 		return 906072
 	case "XOR", "xor":
 		return 907072
+	case "SHL", "shl":
+		return 908072
+	case "SHR", "shr":
+		return 909072
+	case "ROL", "rol":
+		return 911072
+	case "ROR", "ror":
+		return 912072
 	case "CMP", "cmp":
 		return 900332
 	case "JA", "ja":

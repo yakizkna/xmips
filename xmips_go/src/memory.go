@@ -46,7 +46,7 @@ func (m *Memory) write(i, k int) int {
 		}
 		return -1
 	}
-	m.mem[i] = k
+	m.mem[i] = truncWord(k)
 	return 0
 }
 

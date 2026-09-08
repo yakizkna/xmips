@@ -78,7 +78,7 @@ func (im *Interpreter) readGM(n int, proc *Process) int {
 		}
 		return int(b)
 	}
-	return im.GM.read(n)
+	return truncWord(im.GM.read(n))
 }
 
 // effectAddressing 计算有效地址
@@ -217,7 +217,7 @@ func (im *Interpreter) exer(proc *Process) int {
 		case 903072: // DIV
 			tmp := im.GM.mem[15]
 			im.GM.mem[15] /= im.GM.mem[16]
-			im.GM.mem[0] = tmp % im.GM.mem[16] // 余数
+			im.GM.mem[0] = truncWord(tmp % im.GM.mem[16]) // 余数
 		case 904072: // MOD
 			im.GM.mem[15] %= im.GM.mem[16]
 		case 905072: // AND
@@ -226,6 +226,14 @@ func (im *Interpreter) exer(proc *Process) int {
 			im.GM.mem[15] |= im.GM.mem[16]
 		case 907072: // XOR
 			im.GM.mem[15] ^= im.GM.mem[16]
+		case 908072: // SHL
+			im.GM.mem[15] = shiftL(im.GM.mem[15], im.GM.mem[16])
+		case 909072: // SHR
+			im.GM.mem[15] = shiftR(im.GM.mem[15], im.GM.mem[16])
+		case 911072: // ROL
+			im.GM.mem[15] = rotL(im.GM.mem[15], im.GM.mem[16])
+		case 912072: // ROR
+			im.GM.mem[15] = rotR(im.GM.mem[15], im.GM.mem[16])
 		case 900332: // CMP
 			r := im.GM.mem[15] - im.GM.mem[16]
 			if r > 0 {
@@ -345,7 +353,7 @@ func (im *Interpreter) exer(proc *Process) int {
 			im.store(proc.MData, im.MRgst.read(2), im.GM, 15)
 		}
 		if tmp_dataLS == 1 && im.MRgst.read(3) == 1 {
-			im.GM.mem[im.MRgst.read(2)] = im.GM.mem[15]
+			im.GM.write(im.MRgst.read(2), truncWord(im.GM.mem[15]))
 			// 写入输出寄存器 #13：立即按字符输出到 stdout
 			// （INT 14 系统函数内 #13 用作返回标志，不触发输出）
 			if im.MRgst.read(2) == outputReg && !im.isInt14(proc) {
