@@ -365,6 +365,11 @@ func (im *Interpreter) exer(proc *Process) int {
 		im.PC++
 		proc.exetime++
 		i++
+
+		// dump 日志：记录本周期有变化的寄存器与数据段内存
+		if dumpEnabled == 1 {
+			doDump(im, proc)
+		}
 	}
 
 	if i == im.cycleTimes { // 时间片到

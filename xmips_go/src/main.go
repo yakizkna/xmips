@@ -86,6 +86,8 @@ func config() int {
 			if r > 0 {
 				sockTimeout = r
 			}
+		case "dump":
+			dumpEnabled = r
 		}
 	}
 	return 0
@@ -157,6 +159,7 @@ func main() {
 	if config() != 0 {
 		fmt.Println("system parameters config error!")
 	}
+	initDump() // 开启 dump 日志（dump=1 时创建 dump.log）
 
 	// 独立命令：./xmips update → 重建系统函数库（重新汇编 sysfun/*.scp 生成 .co）
 	if len(os.Args) >= 2 && os.Args[1] == "update" {
@@ -165,6 +168,7 @@ func main() {
 		usys := newStorage(106, sysPath[0])
 		cnt := rebuildSysfun(ue, ua, usys)
 		fmt.Printf("system functions rebuilt: %d\n", cnt)
+		closeDump()
 		return
 	}
 

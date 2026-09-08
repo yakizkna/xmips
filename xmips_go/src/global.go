@@ -155,6 +155,9 @@ var diskRoot = "disk"
 // sockTimeout socket connect/write 超时（毫秒）
 var sockTimeout = 2000
 
+// dumpEnabled 是否开启指令执行 dump 日志（config.ini 中  dump=1 开启）
+var dumpEnabled = 0
+
 // singleProc 是否为单进程模式（./xmips xxx.cupa 直跑，或 run.list 仅 1 个文件）。
 // 单进程模式下网络 read 采用阻塞式，多进程模式下用非阻塞，避免卡死时间片轮转
 var singleProc = false
