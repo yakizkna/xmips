@@ -1,0 +1,1824 @@
+~ MD5 计算器（Xmips ABC 汇编，需 bitMode=32）
+~ 输入: 标准输入（≤448 字节）；输出: 32 位小写十六进制 MD5
+DIM BUF D512
+DIM LEN D1
+DIM NBLK D1
+DIM BPTR D1
+DIM A0 D1
+DIM B0 D1
+DIM C0 D1
+DIM D0 D1
+DIM M0 D1
+DIM M1 D1
+DIM M2 D1
+DIM M3 D1
+DIM M4 D1
+DIM M5 D1
+DIM M6 D1
+DIM M7 D1
+DIM M8 D1
+DIM M9 D1
+DIM M10 D1
+DIM M11 D1
+DIM M12 D1
+DIM M13 D1
+DIM M14 D1
+DIM M15 D1
+
+~ 初始值: A=0x67452301 B=0xefcdab89 C=0x98badcfe D=0x10325476
+MOV #0 1732584193
+MOV #1 -271733879
+MOV #2 -1732584194
+MOV #3 271733878
+MOV LEN 0
+
+: READQ
+MOV #6 LEN
+MOV #7 448
+CMP #6 #7
+JB READ1
+JMP PAD
+: READ1
+MOV #6 0
+MOV #7 LEN
+ADD #6 #7
+MOV #11 #6
+MOV #12 1
+MOV #10 14
+INT
+MOV #6 #13
+MOV #7 0
+CMP #6 #7
+JE PAD
+MOV #6 LEN
+ADD #6 1
+MOV LEN #6
+JMP READQ
+
+: PAD
+MOV #6 0
+MOV #7 LEN
+ADD #6 #7
+MOV @#6 128
+MOV #6 LEN
+ADD #6 1
+MOV #8 #6
+AND #8 63
+MOV #7 56
+SUB #7 #8
+AND #7 63
+MOV #6 0
+ADD #6 0
+MOV #8 LEN
+INC #8
+ADD #6 #8
+MOV #4 #6
+: ZLP
+MOV #6 0
+CMP #7 #6
+JE ZDONE
+MOV @#4 0
+INC #4
+SUB #7 1
+JMP ZLP
+: ZDONE
+MOV #8 LEN
+SHL #8 3
+MOV #9 #8
+AND #9 255
+MOV @#4 #9
+INC #4
+MOV #9 #8
+SHR #9 8
+AND #9 255
+MOV @#4 #9
+INC #4
+MOV #9 #8
+SHR #9 16
+AND #9 255
+MOV @#4 #9
+INC #4
+MOV #9 #8
+SHR #9 24
+AND #9 255
+MOV @#4 #9
+INC #4
+MOV #9 0
+MOV @#4 #9
+INC #4
+MOV @#4 #9
+INC #4
+MOV @#4 #9
+INC #4
+MOV @#4 #9
+INC #4
+MOV #8 0
+SUB #4 #8
+SHR #4 6
+MOV NBLK #4
+MOV #8 0
+MOV BPTR #8
+JMP BLK
+
+: BLK
+MOV #6 NBLK
+MOV #7 0
+CMP #6 #7
+JE DONE
+MOV #6 BPTR
+MOV #4 #6
+MOV #5 #4
+ADD #5 0
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M0 #6
+MOV #5 #4
+ADD #5 4
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M1 #6
+MOV #5 #4
+ADD #5 8
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M2 #6
+MOV #5 #4
+ADD #5 12
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M3 #6
+MOV #5 #4
+ADD #5 16
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M4 #6
+MOV #5 #4
+ADD #5 20
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M5 #6
+MOV #5 #4
+ADD #5 24
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M6 #6
+MOV #5 #4
+ADD #5 28
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M7 #6
+MOV #5 #4
+ADD #5 32
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M8 #6
+MOV #5 #4
+ADD #5 36
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M9 #6
+MOV #5 #4
+ADD #5 40
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M10 #6
+MOV #5 #4
+ADD #5 44
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M11 #6
+MOV #5 #4
+ADD #5 48
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M12 #6
+MOV #5 #4
+ADD #5 52
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M13 #6
+MOV #5 #4
+ADD #5 56
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M14 #6
+MOV #5 #4
+ADD #5 60
+MOV #6 @#5
+INC #5
+MOV #7 @#5
+INC #5
+MOV #8 @#5
+INC #5
+MOV #9 @#5
+SHL #7 8
+OR #6 #7
+SHL #8 16
+OR #6 #8
+SHL #9 24
+OR #6 #9
+MOV M15 #6
+MOV A0 #0
+MOV B0 #1
+MOV C0 #2
+MOV D0 #3
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -680876936
+ADD #8 M0
+ROL #8 7
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -389564586
+ADD #8 M1
+ROL #8 12
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 606105819
+ADD #8 M2
+ROL #8 17
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1044525330
+ADD #8 M3
+ROL #8 22
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -176418897
+ADD #8 M4
+ROL #8 7
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 1200080426
+ADD #8 M5
+ROL #8 12
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1473231341
+ADD #8 M6
+ROL #8 17
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -45705983
+ADD #8 M7
+ROL #8 22
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 1770035416
+ADD #8 M8
+ROL #8 7
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1958414417
+ADD #8 M9
+ROL #8 12
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -42063
+ADD #8 M10
+ROL #8 17
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1990404162
+ADD #8 M11
+ROL #8 22
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 1804603682
+ADD #8 M12
+ROL #8 7
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -40341101
+ADD #8 M13
+ROL #8 12
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1502002290
+ADD #8 M14
+ROL #8 17
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #2
+MOV #7 #1
+NEG #7
+SUB #7 1
+AND #7 #3
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 1236535329
+ADD #8 M15
+ROL #8 22
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -165796510
+ADD #8 M1
+ROL #8 5
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1069501632
+ADD #8 M6
+ROL #8 9
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 643717713
+ADD #8 M11
+ROL #8 14
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -373897302
+ADD #8 M0
+ROL #8 20
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -701558691
+ADD #8 M5
+ROL #8 5
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 38016083
+ADD #8 M10
+ROL #8 9
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -660478335
+ADD #8 M15
+ROL #8 14
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -405537848
+ADD #8 M4
+ROL #8 20
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 568446438
+ADD #8 M9
+ROL #8 5
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1019803690
+ADD #8 M14
+ROL #8 9
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -187363961
+ADD #8 M3
+ROL #8 14
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 1163531501
+ADD #8 M8
+ROL #8 20
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1444681467
+ADD #8 M13
+ROL #8 5
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -51403784
+ADD #8 M2
+ROL #8 9
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 1735328473
+ADD #8 M7
+ROL #8 14
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+AND #6 #3
+MOV #7 #3
+NEG #7
+SUB #7 1
+AND #7 #2
+OR #6 #7
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1926607734
+ADD #8 M12
+ROL #8 20
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 -378558
+ADD #8 M5
+ROL #8 4
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 -2022574463
+ADD #8 M8
+ROL #8 11
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 1839030562
+ADD #8 M11
+ROL #8 16
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 -35309556
+ADD #8 M14
+ROL #8 23
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1530992060
+ADD #8 M1
+ROL #8 4
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 1272893353
+ADD #8 M4
+ROL #8 11
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 -155497632
+ADD #8 M7
+ROL #8 16
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1094730640
+ADD #8 M10
+ROL #8 23
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 681279174
+ADD #8 M13
+ROL #8 4
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 -358537222
+ADD #8 M0
+ROL #8 11
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 -722521979
+ADD #8 M3
+ROL #8 16
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 76029189
+ADD #8 M6
+ROL #8 23
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 -640364487
+ADD #8 M9
+ROL #8 4
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 -421815835
+ADD #8 M12
+ROL #8 11
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 530742520
+ADD #8 M15
+ROL #8 16
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #6 #1
+XOR #6 #2
+XOR #6 #3
+MOV #8 #0
+ADD #8 #6
+ADD #8 -995338651
+ADD #8 M2
+ROL #8 23
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 -198630844
+ADD #8 M0
+ROL #8 6
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 1126891415
+ADD #8 M7
+ROL #8 10
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1416354905
+ADD #8 M14
+ROL #8 15
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 -57434055
+ADD #8 M5
+ROL #8 21
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 1700485571
+ADD #8 M12
+ROL #8 6
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1894986606
+ADD #8 M3
+ROL #8 10
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1051523
+ADD #8 M10
+ROL #8 15
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 -2054922799
+ADD #8 M1
+ROL #8 21
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 1873313359
+ADD #8 M8
+ROL #8 6
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 -30611744
+ADD #8 M15
+ROL #8 10
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1560198380
+ADD #8 M6
+ROL #8 15
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 1309151649
+ADD #8 M13
+ROL #8 21
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 -145523070
+ADD #8 M4
+ROL #8 6
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 -1120210379
+ADD #8 M11
+ROL #8 10
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 718787259
+ADD #8 M2
+ROL #8 15
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+MOV #7 #3
+NEG #7
+SUB #7 1
+MOV #6 #1
+OR #6 #7
+XOR #6 #2
+MOV #8 #0
+ADD #8 #6
+ADD #8 -343485551
+ADD #8 M9
+ROL #8 21
+ADD #8 #1
+MOV #9 #3
+MOV #3 #2
+MOV #2 #1
+MOV #1 #8
+MOV #0 #9
+ADD #0 A0
+ADD #1 B0
+ADD #2 C0
+ADD #3 D0
+MOV #6 BPTR
+ADD #6 64
+MOV BPTR #6
+MOV #6 NBLK
+SUB #6 1
+MOV NBLK #6
+JMP BLK
+
+: DONE
+MOV #7 #0
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI1
+ADD #9 39
+: HI1
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO1
+ADD #9 39
+: LO1
+MOV #13 #9
+MOV #7 #0
+SHR #7 8
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI2
+ADD #9 39
+: HI2
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO2
+ADD #9 39
+: LO2
+MOV #13 #9
+MOV #7 #0
+SHR #7 16
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI3
+ADD #9 39
+: HI3
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO3
+ADD #9 39
+: LO3
+MOV #13 #9
+MOV #7 #0
+SHR #7 24
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI4
+ADD #9 39
+: HI4
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO4
+ADD #9 39
+: LO4
+MOV #13 #9
+MOV #7 #1
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI5
+ADD #9 39
+: HI5
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO5
+ADD #9 39
+: LO5
+MOV #13 #9
+MOV #7 #1
+SHR #7 8
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI6
+ADD #9 39
+: HI6
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO6
+ADD #9 39
+: LO6
+MOV #13 #9
+MOV #7 #1
+SHR #7 16
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI7
+ADD #9 39
+: HI7
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO7
+ADD #9 39
+: LO7
+MOV #13 #9
+MOV #7 #1
+SHR #7 24
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI8
+ADD #9 39
+: HI8
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO8
+ADD #9 39
+: LO8
+MOV #13 #9
+MOV #7 #2
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI9
+ADD #9 39
+: HI9
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO9
+ADD #9 39
+: LO9
+MOV #13 #9
+MOV #7 #2
+SHR #7 8
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI10
+ADD #9 39
+: HI10
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO10
+ADD #9 39
+: LO10
+MOV #13 #9
+MOV #7 #2
+SHR #7 16
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI11
+ADD #9 39
+: HI11
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO11
+ADD #9 39
+: LO11
+MOV #13 #9
+MOV #7 #2
+SHR #7 24
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI12
+ADD #9 39
+: HI12
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO12
+ADD #9 39
+: LO12
+MOV #13 #9
+MOV #7 #3
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI13
+ADD #9 39
+: HI13
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO13
+ADD #9 39
+: LO13
+MOV #13 #9
+MOV #7 #3
+SHR #7 8
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI14
+ADD #9 39
+: HI14
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO14
+ADD #9 39
+: LO14
+MOV #13 #9
+MOV #7 #3
+SHR #7 16
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI15
+ADD #9 39
+: HI15
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO15
+ADD #9 39
+: LO15
+MOV #13 #9
+MOV #7 #3
+SHR #7 24
+AND #7 255
+MOV #8 #7
+SHR #8 4
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB HI16
+ADD #9 39
+: HI16
+MOV #13 #9
+MOV #8 #7
+AND #8 15
+MOV #9 #8
+ADD #9 48
+CMP #8 10
+JB LO16
+ADD #9 39
+: LO16
+MOV #13 #9
+MOV #13 10
+END
