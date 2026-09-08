@@ -1,0 +1,35 @@
+~ 单进程 socket 读超时测试：连接 127.0.0.1:9999（服务器收下但不发数据不关闭）
+~ 期望在 sockTimeout(2000ms) 内 read 返回 0（fdNoData），程序结束而非永久阻塞
+DIM SOCK_PATH D20 115,111,99,107,58,49,50,55,46,48,46,48,46,49,58,57,57,57,57,0;
+DIM BUFF D100
+
+~ open socket
+MOV #11 0
+MOV #12 0
+MOV #10 15
+INT
+MOV #1 #9
+CMP #9 #0
+JB fail          ~ open 失败
+
+~ 尝试发一个字节触发报错无关，直接进入读循环
+: rloop
+MOV #11 0
+MOV #12 10
+MOV #9 #1
+MOV #10 16
+INT
+CMP #9 #0
+JNE rloop_not0   ~ 有数据
+JE done          ~ 读到 0（超时/无数据）→ 正常结束
+: rloop_not0
+JMP rloop
+
+: done
+JMP done_end
+: fail
+: done_end
+MOV #9 #1
+MOV #10 18
+INT
+END

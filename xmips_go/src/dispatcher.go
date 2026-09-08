@@ -5,6 +5,11 @@ import (
 	"os"
 )
 
+// fdReg 文件/套接字句柄寄存器。
+// 不用 #13 是因为 #13 是输出寄存器，用户 MOV 写入 #13 会触发 stdout；
+// #9 为通用寄存器，无副作用，且在 INT 压栈/恢复范围内，跨系统调用可靠。
+const fdReg = 9
+
 var stdinReader = bufio.NewReader(os.Stdin)
 
 // Dispatcher 调度器，对应 C++ 的 dispatcher 类
@@ -22,6 +27,7 @@ type Dispatcher struct {
 
 	Finished *Queue   // 完成队列
 	SysCall  *SysList // 系统函数列表
+	FS       *FsDev   // 文件系统/套接字子系统（dispatcher 原生系统调用）
 }
 
 func newDispatcher(key, sysFunLen, finishLen, pcbs int) *Dispatcher {
@@ -284,6 +290,36 @@ func (d *Dispatcher) swap2(im *Interpreter) int {
 			}
 			r = 1
 
+		case 15, 16, 17, 18: // 文件/套接字系统调用（dispatcher 原生，无 .scp）
+			resp := d.fsSyscall(im, r)
+			// 结果写回调用者栈的 fdReg(#9) 槽（INT 压栈帧内），恢复现场时回到 GM[fdReg]
+			sp := d.runb.pptr.S.SP
+			val := resp
+			if resp == fdNoData {
+				val = 0 // 用户视角：当前暂无数据可读
+			}
+			d.runb.pptr.S.write(sp-(17-fdReg), val)
+
+			RES = 205
+			if systemChecker.showLevel(RES, sysLog[:]) {
+				printf("D%-5d caller process ID:%d, file/socket call NO:%d, result:%d ", d.ID, d.runb.ID, r-10, val)
+				systemChecker.check(RES, sysLog[:])
+			}
+			if resp == fdNoData && !singleProc {
+				// socket 无可读数据（多进程非阻塞）：让出时间片，放就绪队尾，
+				// 其他进程插队先运行，本进程稍后被重新调度回来重试，避免忙自旋。
+				d.readyb.enQueue(d.runb)
+				r = 1
+				break
+			}
+			d.readyb.insertToHead(d.runb)
+			RES = 188
+			if systemChecker.showLevel(RES, sysLog[:]) {
+				printf("D%-5d process ID:%d ", d.ID, d.runb.ID)
+				systemChecker.check(RES, sysLog[:])
+			}
+			r = 1
+
 		default: // system call (r >= 10)
 			RES = 173
 			if systemChecker.showLevel(RES, sysLog[:]) {
@@ -324,6 +360,25 @@ func (d *Dispatcher) swap2(im *Interpreter) int {
 		systemChecker.check(RES, sysLog[:])
 	}
 	return 0
+}
+
+// fsSyscall 文件/套接字系统调用（INT 15/16/17/18），由 dispatcher 原生执行
+// 返回值统一通过 fdReg(#9) 槽写回调用者（见 swap2 的 case 15..18）
+func (d *Dispatcher) fsSyscall(im *Interpreter, call int) int {
+	if d.FS == nil {
+		return -2
+	}
+	switch call {
+	case 15: // open: #11=路径地址, #12=模式
+		return d.FS.fsOpen(d.runb.pptr, im.GM.read(11), im.GM.read(12))
+	case 16: // read: #11=缓冲地址, #12=最大长度, fdReg=fd
+		return d.FS.fsRead(d.runb.pptr, im.GM.read(11), im.GM.read(fdReg), im.GM.read(12))
+	case 17: // write
+		return d.FS.fsWrite(d.runb.pptr, im.GM.read(11), im.GM.read(fdReg), im.GM.read(12))
+	case 18: // close
+		return d.FS.fsClose(im.GM.read(fdReg))
+	}
+	return -2
 }
 
 // pcbManagement 分配一个空闲 PCB

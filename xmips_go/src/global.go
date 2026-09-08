@@ -93,6 +93,12 @@ var sysLog = [100]abendNote{
 	{196, 3, "editor::editorFromFile: indentifier repeated"},
 	{197, 3, "editor::editorFromFile: immediate num cant be 1st operand in double operands instruction"},
 	{198, 3, "interpreter::exer: illegal access to input register #14 (only INT 14 can read it)"},
+	{200, 3, "fsdev::open: path escape / open failed"},
+	{201, 3, "fsdev::read: invalid fd"},
+	{202, 3, "fsdev::write: invalid fd / write failed"},
+	{203, 3, "fsdev::close: invalid fd"},
+	{204, 3, "fsdev::net: socket connect / io error"},
+	{205, 1, "dispatcher::swap2: a file/socket system call"},
 }
 
 var sysFunNumber = 5 // 系统函数数量（索引 0-4 → INT 10-14）
@@ -137,6 +143,16 @@ var pcbNum = 40          // PCB 数量：系统最大并发进程数
 
 // wordBits 机器字长（位）：32 或 64。决定通用寄存器与内存中整数的有效位数与进位行为
 var wordBits = 64
+
+// diskRoot 虚拟磁盘目录（相对运行目录）。文件 open 的路径强制限定在此目录内
+var diskRoot = "disk"
+
+// sockTimeout socket connect/write 超时（毫秒）
+var sockTimeout = 2000
+
+// singleProc 是否为单进程模式（./xmips xxx.cupa 直跑，或 run.list 仅 1 个文件）。
+// 单进程模式下网络 read 采用阻塞式，多进程模式下用非阻塞，避免卡死时间片轮转
+var singleProc = false
 
 // truncWord 将任意 int 截断为当前机器字长，返回带符号表示
 // - 64 位：Go int 本身即 64 位带符号，直接返回

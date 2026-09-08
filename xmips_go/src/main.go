@@ -76,6 +76,17 @@ func config() int {
 			if r == 32 || r == 64 {
 				wordBits = r
 			}
+		case "diskRoot":
+			// 字符串值需剥离行内注释与两端空白
+			v := strings.SplitN(val, ";", 2)[0]
+			v = strings.TrimSpace(v)
+			if v != "" {
+				diskRoot = v
+			}
+		case "sockTimeout":
+			if r > 0 {
+				sockTimeout = r
+			}
 		}
 	}
 	return 0
@@ -120,6 +131,7 @@ func main() {
 	e := newEditor(103, codeSize, dataSize)
 	a := newAssembler(102)
 	os_ := newDispatcher(105, 10, 30, pcbNum)
+	os_.FS = newFsDev() // 注入文件系统/套接字子系统
 	sys := newStorage(106, sysPath[0])
 	disk := newStorage(107, sysPath[1])
 
@@ -182,6 +194,7 @@ func main() {
 		}
 
 		if len(os.Args) >= 2 { // 命令行指定程序（可直接传 file 目录内文件名或任意路径）
+			singleProc = true // 单进程模式：网络 read 用阻塞式
 			prog := os.Args[1]
 			// 若参数带路径分隔符或文件不存在于 file 目录，则当作直接路径打开
 			var pfr *os.File
@@ -224,15 +237,17 @@ func main() {
 			name := scanner.Text()
 
 			id := 50 // 用户进程起始 ID
+			loaded := 0
 			for name != "end" && name != "END" {
 				loadFromDisk(name, id)
 				id++
-
+				loaded++
 				if !scanner.Scan() {
 					break
 				}
 				name = scanner.Text()
 			}
+			singleProc = loaded <= 1 // 仅 1 个文件视为单进程模式
 			run.Close()
 		}
 	}

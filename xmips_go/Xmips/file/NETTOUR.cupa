@@ -1,0 +1,58 @@
+~ 网络(HTTPS)+文件测试：访问 https://ace.yakidev.top/tour 并把原始响应写入 tour.html
+~ 数据段布局（连续 DIM 顺序分配）:
+~   0..24   SOCK_PATH  "sock:ace.yakidev.top:443" (443 端口自动 TLS)
+~   25..89  REQ        HTTP GET 请求（64 字节，含 \r\n\r\n 结束）
+~   89..98  OUT_FN     "tour.html"
+~   99..    BUFF       读缓冲（200 字）
+DIM SOCK_PATH D25 115,111,99,107,58,97,99,101,46,121,97,107,105,100,101,118,46,116,111,112,58,52,52,51,0;
+DIM REQ D64 71,69,84,32,47,116,111,117,114,32,72,84,84,80,47,49,46,49,13,10,72,111,115,116,58,32,97,99,101,46,121,97,107,105,100,101,118,46,116,111,112,13,10,67,111,110,110,101,99,116,105,111,110,58,32,99,108,111,115,101,13,10,13,10;
+DIM OUT_FN D10 116,111,117,114,46,104,116,109,108,0;
+DIM BUFF D200
+
+~ ---- 1) open socket (自动 TLS, 443) -> #1 = sockfd ----
+MOV #11 0
+MOV #12 0
+MOV #10 15
+INT
+MOV #1 #9
+
+~ ---- 2) write HTTP GET 请求到 socket (REQ 64 字节) ----
+MOV #11 25
+MOV #12 64
+MOV #9 #1
+MOV #10 17
+INT
+
+~ ---- 3) open 文件 tour.html 写模式 -> #2 = filefd ----
+MOV #11 89
+MOV #12 1
+MOV #10 15
+INT
+MOV #2 #9
+
+~ ---- 4) 循环: read socket(<=200) -> write 到文件，直到 EOF/错误 ----
+: loop
+MOV #11 99
+MOV #12 200
+MOV #9 #1
+MOV #10 16
+INT
+CMP #9 #0
+JB end_rd        ~ #9 < 0（EOF/错误）结束
+JE end_rd        ~ #9 == 0（无数据）结束
+MOV #11 99
+MOV #12 #9       ~ 写入已读到的字节数
+MOV #9 #2
+MOV #10 17
+INT
+JMP loop
+
+~ ---- 5) close socket & file ----
+: end_rd
+MOV #9 #1
+MOV #10 18
+INT
+MOV #9 #2
+MOV #10 18
+INT
+END

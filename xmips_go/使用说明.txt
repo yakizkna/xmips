@@ -108,6 +108,27 @@ Xmips 系统目录（xmips_go/Xmips）下包括
 注意：输入寄存器 #14 只能由 INT 14 系统函数读取；其它进程访问 #14 会触发系统错误
 RES=198。
 
+文件与真实网络 Socket（INT 15~18，dispatcher 原生执行，无 .scp）
+    调用约定：#10=调用号，#11/#12=参数，fd 用 #9（返回值也是 #9）。
+    INT 15 open    #11=路径串地址(数据段0结尾)，#12=模式；返回 fd。
+    INT 16 read    #11=缓冲地址，#12=最大长度，#9=fd；返回实际字节数（0=暂无数据/EOF）。
+    INT 17 write   #11=缓冲地址，#12=写入长度，#9=fd；返回实际写入字节数。
+    INT 18 close   #9=fd。
+
+    open 路径前缀：
+        sock:host:port    TCP 客户端；端口 443 自动启用 TLS（cupa 无需关心加密）。
+        tlssock:host:port TCP 客户端；强制 TLS（ServerName=host）。
+        其它              文件，映射到虚拟磁盘 diskRoot 目录内（拒绝 .. 越界）。
+    #12 模式：0=只读，1=写(截断)，2=读写追加（仅文件有效）。fd 从 3 起。
+
+    阻塞语义由单进程模式决定（`./xmips xxx.cupa` 直跑，或 run.list 恰有 1 个文件）：
+        单进程：socket read 阻塞等待，受 sockTimeout（默认 2000ms）超时保护，超时返回 0，不会卡死。
+        多进程：socket read 非阻塞，无数据时返回 0 并让出时间片（放就绪队尾，避免忙自旋）。
+    socket write 与 connect/握手均受 sockTimeout 约束。
+    错误码：-1 open失败/越界，-2 非法fd，-3 连接失败，-4 write缓冲满，-5 socket关闭/读写错误。
+    示例：file/NETTOUR.cupa（HTTPS 抓取 https://ace.yakidev.top/tour 并写入 tour.html）。
+    配置项：diskRoot（虚拟磁盘目录）、sockTimeout（socket 超时毫秒）。
+
 五、编辑汇编源程序
 ------------------------
 要运行的用户源程序必须建立在 Xmips\file 目录下。
