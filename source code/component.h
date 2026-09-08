@@ -4,26 +4,26 @@
 #include <stdlib.h>
 #include <conio.h>
 
-struct abendNote;	//ÏµÍ³ÔËĞĞ×´Ì¬½á¹¹
-struct varNote;		//·ûºÅ±íÏî½á¹¹£¬»ã±àÊ±Ê¹ÓÃ
-	struct varNote2;	//±êºÅ±íÏî/Ìø×ªÓï¾ä±íÏî½á¹¹£¬ÊÇ·ûºÅ±íÏî×ÓÀà£¬»ã±àÊ±Ê¹ÓÃ
-class assembler;	//»ã±à¹¤¾ßÀà
-class checker;		//¼ì´íÀà£¬ÓÃÓÚ¼ì²âÏµÍ³×´Ì¬
-class editor;		//±à¼­Æ÷Àà£¬Ê¹ÓÃ»ã±à¹¤¾ßÏÖĞĞ»ã±à
-class interpreter;	//½âÊÍÆ÷Àà£¬ÓÃÓÚ½âÊÍÖ´ĞĞÖ¸Áî
-class list;			//Á´±íÀà
-	class sysList;	//ÏµÍ³º¯ÊıÁ´±íÀà£¬ÊÇÁ´±íÀà×ÓÀàÓÃÀ´´æ´¢Ö¸ÁîºÍÊı¾İ
-class memory;		//´æ´¢Æ÷Àà£¬
-	class stack;	//¶ÑÕ»Àà£¬´æ´¢Æ÷Àà×ÓÀà
-class process;		//½ø³ÌÀà
-class queue;		//¶ÓÁĞÀà
-class pcb;			//½ø³Ì¿ØÖÆ¿éÀà
-class pcbList;		//½ø³Ì¿ØÖÆ¿éÁ´±íÀà£¬¶¯Ì¬Á´±í
+struct abendNote;	//ç³»ç»Ÿè¿è¡ŒçŠ¶æ€ç»“æ„
+struct varNote;		//ç¬¦å·è¡¨é¡¹ç»“æ„ï¼Œæ±‡ç¼–æ—¶ä½¿ç”¨
+	struct varNote2;	//æ ‡å·è¡¨é¡¹/è·³è½¬è¯­å¥è¡¨é¡¹ç»“æ„ï¼Œæ˜¯ç¬¦å·è¡¨é¡¹å­ç±»ï¼Œæ±‡ç¼–æ—¶ä½¿ç”¨
+class assembler;	//æ±‡ç¼–å·¥å…·ç±»
+class checker;		//æ£€é”™ç±»ï¼Œç”¨äºæ£€æµ‹ç³»ç»ŸçŠ¶æ€
+class editor;		//ç¼–è¾‘å™¨ç±»ï¼Œä½¿ç”¨æ±‡ç¼–å·¥å…·ç°è¡Œæ±‡ç¼–
+class interpreter;	//è§£é‡Šå™¨ç±»ï¼Œç”¨äºè§£é‡Šæ‰§è¡ŒæŒ‡ä»¤
+class list;			//é“¾è¡¨ç±»
+	class sysList;	//ç³»ç»Ÿå‡½æ•°é“¾è¡¨ç±»ï¼Œæ˜¯é“¾è¡¨ç±»å­ç±»ç”¨æ¥å­˜å‚¨æŒ‡ä»¤å’Œæ•°æ®
+class memory;		//å­˜å‚¨å™¨ç±»ï¼Œ
+	class stack;	//å †æ ˆç±»ï¼Œå­˜å‚¨å™¨ç±»å­ç±»
+class process;		//è¿›ç¨‹ç±»
+class queue;		//é˜Ÿåˆ—ç±»
+class pcb;			//è¿›ç¨‹æ§åˆ¶å—ç±»
+class pcbList;		//è¿›ç¨‹æ§åˆ¶å—é“¾è¡¨ç±»ï¼ŒåŠ¨æ€é“¾è¡¨
 
 typedef process* procptr; //process pointer
 typedef pcb* pcbptr;	//pcb pointer
 
-//ÒÔÏÂÈ«¾Ö±äÁ¿ÔÚglobal.cppÖĞ¶¨Òå
+//ä»¥ä¸‹å…¨å±€å˜é‡åœ¨global.cppä¸­å®šä¹‰
 extern int RES;
 extern checker systemChecker; 
 extern abendNote sysLog[100];
@@ -33,10 +33,10 @@ extern char* sysPath[2];
 extern char runList[40];
 extern int displayMode;
 extern int reportLevel;
-extern int delayMode; //0 Load/StoreÎŞÑÓÊ±£»1 Load/StoreÓĞÑÓÊ±
+extern int delayMode; //0 Load/Storeæ— å»¶æ—¶ï¼›1 Load/Storeæœ‰å»¶æ—¶
 extern int updateSysfun;
 extern void procDelay(int mode, long time_ms);
-extern int Load(procptr pptr, char *s);	//ÁÙÊ±¶Á×Ö·ûÂëµ½ÄÚ´æº¯Êı
+extern int Load(procptr pptr, char *s);	//ä¸´æ—¶è¯»å­—ç¬¦ç åˆ°å†…å­˜å‡½æ•°
 
 struct abendNote{
 	int abendCode;	//abend NO.
@@ -67,7 +67,7 @@ public:
 
 };
 
-class memory{ //ÓÑÔªÀà interpreter£¬process£¬dispatcher
+class memory{ //å‹å…ƒç±» interpreterï¼Œprocessï¼Œdispatcher
 //protected: //for process to copy; need to improve!!!
 protected:
 	int *mem;	//ptr to storage units 
@@ -225,19 +225,19 @@ public:
 };
 
 class editor{
-	const int codeBufferSize; //´úÂë»º³åÇøµÄ´óĞ¡
-	int codeBuffer[200];	//ÓÃÓÚÁÙÊ±±£´æ´úÂë¶Î
-	int dataBuffer[100];	//ÓÃÓÚÁÙÊ±±£´æÊı¾İ¶Î
+	const int codeBufferSize; //ä»£ç ç¼“å†²åŒºçš„å¤§å°
+	int codeBuffer[200];	//ç”¨äºä¸´æ—¶ä¿å­˜ä»£ç æ®µ
+	int dataBuffer[100];	//ç”¨äºä¸´æ—¶ä¿å­˜æ•°æ®æ®µ
 public:
 	int ID;
 
 	editor(int key, int codeSize=200): codeBufferSize(codeSize){ 
 	//	int i;
 		ID=key; 
-	//	for(i=0; i<codeBufferSize; i++){	//³õÊ¼»¯»º³åÇø
+	//	for(i=0; i<codeBufferSize; i++){	//åˆå§‹åŒ–ç¼“å†²åŒº
 	//		codeBuffer[i]=0;
 	//		dataBuffer[i]=0;
-	//	} //Î´ÖªÎÊÌâ
+	//	} //æœªçŸ¥é—®é¢˜
 	};
 
 	//int editorCollection(memory &M, int k,assembler &A);	//choose different editor	
@@ -246,13 +246,13 @@ public:
 	int editorDataFromFile(FILE *pfile, memory &M, assembler &A); ////use to edit input data file
 	//int editorCode(memory &M, assembler &A);	//use to edit MCode
 	//int editorCodeFromFile(FILE *pfile, memory &M, assembler &A); //use to edit input code file
-	int editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData); //use to edit input code file //·µ»Ø´úÂë¶Î³¤¶È
+	int editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData); //use to edit input code file //è¿”å›ä»£ç æ®µé•¿åº¦
 	//int editorFromFileToFile(FILE *pfile, procptr pptr, assembler &A); //use to edit input code file
 	//int editorCodeToFile(FILE *pfile, memory &M, assembler &A); //use to edit to file
 
-	int ASM(FILE *pfile, assembler &A, char *s); //»ã±à³ÌĞò
+	int ASM(FILE *pfile, assembler &A, char *s); //æ±‡ç¼–ç¨‹åº
 	/*
-	void saveMem(FILE *fp, int len){	//½«´úÂë¶ÎºÍÊı¾İ¶ÎµÄÄÚÈİ±£´æµ½ÎÄ¼ş
+	void saveMem(FILE *fp, int len){	//å°†ä»£ç æ®µå’Œæ•°æ®æ®µçš„å†…å®¹ä¿å­˜åˆ°æ–‡ä»¶
 		int i;
 		for(i=0; i<len; i++){
 			fprintf(fp,"%d ",ad(i));
@@ -335,11 +335,11 @@ public:
 
 class interpreter{
 	int cycleTimes;	//max cycletimes at a execute time
-	memory MRgst; //ÄÚ²¿¼Ä´æÆ÷£¬ÓÃÓÚ¼Ä´æ²Ù×÷Âë£¬²Ù×÷ÊıµÄµØÖ·µÈ	
-	memory GM;	//general register group£¬Í¨ÓÃ¼Ä´æÆ÷×é
-	int GMNumber;	//Í¨ÓÃ¼Ä´æÆ÷µÄÊıÄ¿£¬¼´Í¨ÓÃ¼Ä´æÆ÷×éµÄ´óĞ¡
-	int flag;	//×´Ì¬×Ö¼Ä´æÆ÷£¬Ä¿Ç°Ö»±£´æcmpÖ¸ÁîµÄ±È½Ï½á¹û£¨Õı1£¬¸º-1£¬Áã0£©
-	int PC;	//Ö¸Áî¼ÆÊıÆ÷
+	memory MRgst; //å†…éƒ¨å¯„å­˜å™¨ï¼Œç”¨äºå¯„å­˜æ“ä½œç ï¼Œæ“ä½œæ•°çš„åœ°å€ç­‰	
+	memory GM;	//general register groupï¼Œé€šç”¨å¯„å­˜å™¨ç»„
+	int GMNumber;	//é€šç”¨å¯„å­˜å™¨çš„æ•°ç›®ï¼Œå³é€šç”¨å¯„å­˜å™¨ç»„çš„å¤§å°
+	int flag;	//çŠ¶æ€å­—å¯„å­˜å™¨ï¼Œç›®å‰åªä¿å­˜cmpæŒ‡ä»¤çš„æ¯”è¾ƒç»“æœï¼ˆæ­£1ï¼Œè´Ÿ-1ï¼Œé›¶0ï¼‰
+	int PC;	//æŒ‡ä»¤è®¡æ•°å™¨
 public:
 	int ID;
 
@@ -349,7 +349,7 @@ public:
 		GMNumber=GMNum;
 	};
 	int exer(process &proc);
-	int effectAddressing(int addcode, int fadd, process &proc, int &RorM);//¸ù¾İÑ°Ö··½Ê½ºÍĞÎÊ½µØÖ·£¬¼ÆËãÓĞĞ§µØÖ·
+	int effectAddressing(int addcode, int fadd, process &proc, int &RorM);//æ ¹æ®å¯»å€æ–¹å¼å’Œå½¢å¼åœ°å€ï¼Œè®¡ç®—æœ‰æ•ˆåœ°å€
 	void load(memory &M1, int id, memory &M2, int is) { procDelay(delayMode,100); M1.write(id, M2.read(is)); };	//mov index is in M2 to index id in M1
 	void store(memory &M1, int id, memory &M2, int is) { procDelay(delayMode,100); M1.write(id, M2.read(is)); };	//mov index is in M2 to index id in M1
 	void push(int vs, stack &S) { procDelay(delayMode,50); S.push(vs); }; //immediate push

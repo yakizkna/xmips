@@ -521,11 +521,11 @@ int interpreter::effectAddressing(int addcode, int fadd,process &proc, int &RorM
 	int type;
 	int EA;
 
-	R=addcode/100;	//Æ«ÒÆÑ°Ö·Ê±Ê¹ÓÃµÄÍ¨ÓÃ¼Ä´æÆ÷ºÅ
-	type=addcode%100;	//Ñ°Ö··½Ê½
-	RorM=0;	//0£¬²Ù×÷ÊıÔÚÖ÷´æ£»1£¬²Ù×÷ÊıÔÚ¼Ä´æÆ÷£»2£¬²Ù×÷ÊıÎªÁ¢¼´Êı¡£0 memory;1 register; 2 immediate
+	R=addcode/100;	//åç§»å¯»å€æ—¶ä½¿ç”¨çš„é€šç”¨å¯„å­˜å™¨å·
+	type=addcode%100;	//å¯»å€æ–¹å¼
+	RorM=0;	//0ï¼Œæ“ä½œæ•°åœ¨ä¸»å­˜ï¼›1ï¼Œæ“ä½œæ•°åœ¨å¯„å­˜å™¨ï¼›2ï¼Œæ“ä½œæ•°ä¸ºç«‹å³æ•°ã€‚0 memory;1 register; 2 immediate
 
-	switch(type){//¾ßÌåÓĞĞ§µØÖ·µÄ¼ÆËã·½·¨Ïê¼ûÎÄµµ¡¶ÓĞĞ§µØÖ·µÄ¼ÆËã¡·
+	switch(type){//å…·ä½“æœ‰æ•ˆåœ°å€çš„è®¡ç®—æ–¹æ³•è¯¦è§æ–‡æ¡£ã€Šæœ‰æ•ˆåœ°å€çš„è®¡ç®—ã€‹
 		case 0: EA=fadd;
 				break;
 		case 2: EA=fadd;
@@ -548,7 +548,7 @@ int interpreter::effectAddressing(int addcode, int fadd,process &proc, int &RorM
 				return -1;
 	}
 
-	return EA;	//·µ»ØÓĞĞ§µØÖ·
+	return EA;	//è¿”å›æœ‰æ•ˆåœ°å€
 
 
 }
@@ -556,10 +556,10 @@ int interpreter::effectAddressing(int addcode, int fadd,process &proc, int &RorM
 int interpreter::exer(process &proc){	//MCode:Code memory, MData:Data memory, m: temp memory
 	//int codeChangeFlag[2]={0,0};
 	//C.CM=0;	//note the position of units in MCode and m
-	int i=0;	//ÓÃÓÚ¼ÆÊı³ÌĞòÖ´ĞĞµÄ´ÎÊı¡£
-	int ppk;	//±£´æÍ¨ÓÃ¼Ä´æÆ÷×éµÄÖµÊ±£¬ÓÃÓÚ¼ÆÊı
+	int i=0;	//ç”¨äºè®¡æ•°ç¨‹åºæ‰§è¡Œçš„æ¬¡æ•°ã€‚
+	int ppk;	//ä¿å­˜é€šç”¨å¯„å­˜å™¨ç»„çš„å€¼æ—¶ï¼Œç”¨äºè®¡æ•°
 
-	if(proc.exetime==0){//µÚÒ»´ÎÖ´ĞĞ
+	if(proc.exetime==0){//ç¬¬ä¸€æ¬¡æ‰§è¡Œ
 		PC=0; //first execute
 		proc.exetime=1;
 	}	
@@ -594,15 +594,15 @@ int interpreter::exer(process &proc){	//MCode:Code memory, MData:Data memory, m:
 		}
 	*/	
 
-		int addVisit_s, addVisit_d;	//Ô´²Ù×÷ÊıºÍÄ¿µÄ²Ù×÷ÊıµÄÑ°Ö··½Ê½
-		int opType;	//²Ù×÷ÊıÀàĞÍ
-		int EA_s, EA_d;	//Ô´²Ù×÷ÊıºÍÄ¿µÄ²Ù×÷ÊıµÄÓĞĞ§µØÖ·¡£effective address
-		int RorM_s,RorM_d;//²Ù×÷Êı´æ·ÅµÄÎ»ÖÃ
-		int dataLS;//Êı¾İÍ¨Â·ĞÅÏ¢£¬Ïê¼ûÎÄµµ¡¶²Ù×÷ÂëµÄÊı¾İ²Ù×÷·½Ê½¡·
+		int addVisit_s, addVisit_d;	//æºæ“ä½œæ•°å’Œç›®çš„æ“ä½œæ•°çš„å¯»å€æ–¹å¼
+		int opType;	//æ“ä½œæ•°ç±»å‹
+		int EA_s, EA_d;	//æºæ“ä½œæ•°å’Œç›®çš„æ“ä½œæ•°çš„æœ‰æ•ˆåœ°å€ã€‚effective address
+		int RorM_s,RorM_d;//æ“ä½œæ•°å­˜æ”¾çš„ä½ç½®
+		int dataLS;//æ•°æ®é€šè·¯ä¿¡æ¯ï¼Œè¯¦è§æ–‡æ¡£ã€Šæ“ä½œç çš„æ•°æ®æ“ä½œæ–¹å¼ã€‹
 		
 		
-		opType=MRgst.read(0)%10;//²Ù×÷ÂëµÄ×îºóÒ»Î»±íÊ¾²Ù×÷ÊıµÄ¸öÊı
-		dataLS=(MRgst.read(0)%100)/10;//²Ù×÷ÂëµÄµ¹ÊıµÚ¶şÎ»±íÊ¾²Ù×÷ÂëµÄÊı¾İ²Ù×÷·½Ê½
+		opType=MRgst.read(0)%10;//æ“ä½œç çš„æœ€åä¸€ä½è¡¨ç¤ºæ“ä½œæ•°çš„ä¸ªæ•°
+		dataLS=(MRgst.read(0)%100)/10;//æ“ä½œç çš„å€’æ•°ç¬¬äºŒä½è¡¨ç¤ºæ“ä½œç çš„æ•°æ®æ“ä½œæ–¹å¼
 
 		load(MRgst,1,proc.MCode,PC);	PC++;	//load addressing way
 		load(MRgst,2,proc.MCode,PC);	PC++;	//load operand s
@@ -611,17 +611,17 @@ int interpreter::exer(process &proc){	//MCode:Code memory, MData:Data memory, m:
 		addVisit_s=MRgst.read(1)%1000;	//first addressing
 		addVisit_d=MRgst.read(1)/1000;	//second addressing
 
-		if(opType==0){//ÎŞ²Ù×÷Êı
-			MRgst.write(3,-1);	//mean no operation¡£ÓÃÒÔ±ê¼ÇÎó²Ù×÷Êı
+		if(opType==0){//æ— æ“ä½œæ•°
+			MRgst.write(3,-1);	//mean no operationã€‚ç”¨ä»¥æ ‡è®°è¯¯æ“ä½œæ•°
 		}
 		else
-			if(opType==1){//µ¥²Ù×÷Êı
-				EA_s=effectAddressing(addVisit_s,MRgst.read(2),proc,RorM_s);	//¼ÆËãÓĞĞ§µØÖ·
-				MRgst.write(2,EA_s);	//±£´æÓĞĞ§µØÖ·µ½ÄÚ²¿¼Ä´æÆ÷
-				MRgst.write(3,RorM_s);	//±£´æ²Ù×÷Êı´æ·ÅµÄÎ»ÖÃ
+			if(opType==1){//å•æ“ä½œæ•°
+				EA_s=effectAddressing(addVisit_s,MRgst.read(2),proc,RorM_s);	//è®¡ç®—æœ‰æ•ˆåœ°å€
+				MRgst.write(2,EA_s);	//ä¿å­˜æœ‰æ•ˆåœ°å€åˆ°å†…éƒ¨å¯„å­˜å™¨
+				MRgst.write(3,RorM_s);	//ä¿å­˜æ“ä½œæ•°å­˜æ”¾çš„ä½ç½®
 			}
 			else
-				if(opType==2){//Ë«²Ù×÷Êı
+				if(opType==2){//åŒæ“ä½œæ•°
 					EA_s=effectAddressing(addVisit_s,MRgst.read(2),proc,RorM_s);
 					MRgst.write(2,EA_s);
 					MRgst.write(3,RorM_s);
@@ -631,16 +631,16 @@ int interpreter::exer(process &proc){	//MCode:Code memory, MData:Data memory, m:
 					MRgst.write(5,RorM_d);
 				}
 
-		int tmp_dataLS=dataLS;	//£¨ÁÙÊ±£©²Ù×÷ÂëµÄÊı¾İ²Ù×÷·½Ê½
+		int tmp_dataLS=dataLS;	//ï¼ˆä¸´æ—¶ï¼‰æ“ä½œç çš„æ•°æ®æ“ä½œæ–¹å¼
 
 		if(tmp_dataLS%2 == 1 && MRgst.read(5)==0){
-			load(GM,16,proc.MData,MRgst.read(4));	//ĞèÒª½«Ô´²Ù×÷ÊıµÄÊıÖµ±£´æµ½Êı¾İ¼Ä´æÆ÷£¨Î»ÓÚÍ¨ÓÃ¼Ä´æÆ÷×éµÄ16Î»£©
+			load(GM,16,proc.MData,MRgst.read(4));	//éœ€è¦å°†æºæ“ä½œæ•°çš„æ•°å€¼ä¿å­˜åˆ°æ•°æ®å¯„å­˜å™¨ï¼ˆä½äºé€šç”¨å¯„å­˜å™¨ç»„çš„16ä½ï¼‰
 		}
 		
 		tmp_dataLS>>=1;
 	
 		if(tmp_dataLS%2 == 1 && MRgst.read(3)==0){
-			load(GM,15,proc.MData,MRgst.read(2));	//ĞèÒª½«Ä¿µÄ²Ù×÷ÊıµÄÊıÖµ±£´æµ½Êı¾İ¼Ä´æÆ÷£¨Î»ÓÚÍ¨ÓÃ¼Ä´æÆ÷×éµÄ15Î»£©
+			load(GM,15,proc.MData,MRgst.read(2));	//éœ€è¦å°†ç›®çš„æ“ä½œæ•°çš„æ•°å€¼ä¿å­˜åˆ°æ•°æ®å¯„å­˜å™¨ï¼ˆä½äºé€šç”¨å¯„å­˜å™¨ç»„çš„15ä½ï¼‰
 		}
 
 		tmp_dataLS>>=1;
@@ -678,7 +678,7 @@ int interpreter::exer(process &proc){	//MCode:Code memory, MData:Data memory, m:
 					int tmp;
 					tmp=GM.mem[15];
 					GM.mem[15]/=GM.mem[16];
-					GM.mem[0]=tmp % GM.mem[16]; //±£´æÓàÊı
+					GM.mem[0]=tmp % GM.mem[16]; //ä¿å­˜ä½™æ•°
 					break;
 			case 904072:												//mod
 					GM.mem[15]%=GM.mem[16];
@@ -717,7 +717,7 @@ int interpreter::exer(process &proc){	//MCode:Code memory, MData:Data memory, m:
 					//C.CM++;	//the opcode has only one operand, so there is a blank line need to cross
 					//if(C.flag>0) C.ja(MRgst.read(1));
 					//if(flag>0) { PC=4*GM.mem[15]; flag=0;}
-					if(flag>0) { PC=GM.mem[15]; flag=0;}	//ÔÚĞÂµÄÌø×ªÓï¾äÖĞ£¬Ö±½ÓÌøµ½¶ÔÓ¦ĞĞºÅ£¬²»ĞèÒªÔÙ³ËÒÔ4
+					if(flag>0) { PC=GM.mem[15]; flag=0;}	//åœ¨æ–°çš„è·³è½¬è¯­å¥ä¸­ï¼Œç›´æ¥è·³åˆ°å¯¹åº”è¡Œå·ï¼Œä¸éœ€è¦å†ä¹˜ä»¥4
 					break;
 			case 900521: //C.mov(proc.MRgst,1,proc.MCode,C.CM); C.CM++;	//jb
 					//C.CM++;
@@ -776,7 +776,7 @@ int interpreter::exer(process &proc){	//MCode:Code memory, MData:Data memory, m:
 					//C.CM++;
 					//C.push(C.CM,proc.S);
 					//C.push(C.flag,proc.S);
-					for(ppk=0; ppk<15; ppk++)	//ÖĞ¶Ï£¬±£´æÏÖ³¡ĞÅÏ¢
+					for(ppk=0; ppk<15; ppk++)	//ä¸­æ–­ï¼Œä¿å­˜ç°åœºä¿¡æ¯
 						push(GM.mem[ppk],proc.S);
 					push(PC,proc.S);
 					push(flag,proc.S);
@@ -797,8 +797,8 @@ int interpreter::exer(process &proc){	//MCode:Code memory, MData:Data memory, m:
 
 					//C.mov(MRgst,1,proc.MData,MRgst.read(1)); //change the fun's address in MData to its value 
 					//C.CM=4*MRgst.read(1);	//!!! violate rule ,directly from mem!!!
-					PC=GM.mem[15]; flag=0;	//¸ÄÎªÏàÍ¬
-					//PC=4*GM.mem[15];  //ºÍÌø×ªÓï¾ä²»Í¬
+					PC=GM.mem[15]; flag=0;	//æ”¹ä¸ºç›¸åŒ
+					//PC=4*GM.mem[15];  //å’Œè·³è½¬è¯­å¥ä¸åŒ
 					break;
 			case 904200: //C.CM+=2;										//ret
 					//C.pop(C.flag,proc.S);
@@ -892,20 +892,20 @@ int interpreter::exer(process &proc){	//MCode:Code memory, MData:Data memory, m:
 		*/
 
 		if(tmp_dataLS==1 && MRgst.read(3)==0){
-			store(proc.MData,MRgst.read(2),GM,15);	//½«ÔËËã½á¹ûĞ´»ØÖ÷´æ
+			store(proc.MData,MRgst.read(2),GM,15);	//å°†è¿ç®—ç»“æœå†™å›ä¸»å­˜
 		}
 
-		if(tmp_dataLS==1 && MRgst.read(3)==1) GM.mem[MRgst.read(2)]=GM.mem[15];	//ÔËËã½á¹ûĞ´»Ø¼Ä´æÆ÷¡£operand in reg (GM);
+		if(tmp_dataLS==1 && MRgst.read(3)==1) GM.mem[MRgst.read(2)]=GM.mem[15];	//è¿ç®—ç»“æœå†™å›å¯„å­˜å™¨ã€‚operand in reg (GM);
 
 		load(MRgst,0,proc.MCode,PC);	PC++;	//load next opcode
 		proc.exetime++;	//exetime add 1
 		i++;
 	}
 
-	if(i==cycleTimes){	//½âÊÍÆ÷ÖÜÆÚµ½£¨½âÊÍÆ÷µÄÖÜÆÚÔÚ½¨Á¢½âÊÍÆ÷¶ÔÏóÊ±Éè¶¨£©£¬½ø³ÌÃ¿Ò»ÂÖÔËĞĞÖÜÆÚ°üº¬µÄ½âÊÍÆ÷ÖÜÆÚÊıÓÃ½ø³ÌµÄÓÅÏÈ¼¶¹æ¶¨
+	if(i==cycleTimes){	//è§£é‡Šå™¨å‘¨æœŸåˆ°ï¼ˆè§£é‡Šå™¨çš„å‘¨æœŸåœ¨å»ºç«‹è§£é‡Šå™¨å¯¹è±¡æ—¶è®¾å®šï¼‰ï¼Œè¿›ç¨‹æ¯ä¸€è½®è¿è¡Œå‘¨æœŸåŒ…å«çš„è§£é‡Šå™¨å‘¨æœŸæ•°ç”¨è¿›ç¨‹çš„ä¼˜å…ˆçº§è§„å®š
 		PC--;
 
-		for(ppk=0; ppk<15; ppk++)	//±£´æÏÖ³¡
+		for(ppk=0; ppk<15; ppk++)	//ä¿å­˜ç°åœº
 			push(GM.mem[ppk],proc.S);
 		push(PC,proc.S);
 		push(flag,proc.S);
@@ -920,7 +920,7 @@ int interpreter::exer(process &proc){	//MCode:Code memory, MData:Data memory, m:
 		}
 		return 1;
 	}
-	else	//½âÊÍÆ÷Òç³ö
+	else	//è§£é‡Šå™¨æº¢å‡º
 		if(PC==proc.MCode.mSize){	//this condition maybe not happen //happen!!!
 			
 			RES=21;
@@ -930,7 +930,7 @@ int interpreter::exer(process &proc){	//MCode:Code memory, MData:Data memory, m:
 			}
 			return -1;
 		}
-		else{ //END 900000 or HALT 800000¡£½ø³ÌÔËĞĞ½áÊø
+		else{ //END 900000 or HALT 800000ã€‚è¿›ç¨‹è¿è¡Œç»“æŸ
 			
 			RES=23;
 			if(systemChecker.showLevel(RES, sysLog)){

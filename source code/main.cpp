@@ -1,6 +1,6 @@
 #include "component.h"
 
-int config(void){	//¶ÁÈ¡ÏµÍ³µÄÅäÖÃĞÅÏ¢
+int config(void){	//è¯»å–ç³»ç»Ÿçš„é…ç½®ä¿¡æ¯
 	FILE *fp;
 	char para[40];
 
@@ -16,13 +16,13 @@ int config(void){	//¶ÁÈ¡ÏµÍ³µÄÅäÖÃĞÅÏ¢
 		
 		*cp=0;
 		r=atoi(cp+1);
-		if(!strcmp(para,"delayMode"))	//ÑÓ³Ù·½Ê½
+		if(!strcmp(para,"delayMode"))	//å»¶è¿Ÿæ–¹å¼
 			delayMode=r;
-		if(!strcmp(para,"displayMode"))	//ÏÔÊ¾Ä£Ê½
+		if(!strcmp(para,"displayMode"))	//æ˜¾ç¤ºæ¨¡å¼
 			displayMode=r;
-		if(!strcmp(para,"reportLevel"))	//ÔËĞĞÇé¿ö±¨¸æ
+		if(!strcmp(para,"reportLevel"))	//è¿è¡Œæƒ…å†µæŠ¥å‘Š
 			reportLevel=r;
-		if(!strcmp(para,"updateSysfun"))	//ÖØĞÂ»ã±àÏµÍ³³ÌĞò¿â
+		if(!strcmp(para,"updateSysfun"))	//é‡æ–°æ±‡ç¼–ç³»ç»Ÿç¨‹åºåº“
 			updateSysfun=r;
 
 	}while(1);

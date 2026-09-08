@@ -114,9 +114,9 @@ int displayMode=0; //0 hide the content of the process loaded to system; 1 show 
 
 int reportLevel=0; //0 report Error, 1 report Normal and Error, 2 report all
 
-void procDelay(int mode, long time_ms){ //ÔÚinterpreterµÄload,store,push,popµÈº¯ÊıÖĞÊ¹ÓÃ
+void procDelay(int mode, long time_ms){ //åœ¨interpreterçš„load,store,push,popç­‰å‡½æ•°ä¸­ä½¿ç”¨
 	static int times=0;
-	if(mode==1){ //ÑÓÊ±Ä£Ê½¿ªÆô
+	if(mode==1){ //å»¶æ—¶æ¨¡å¼å¼€å¯
 		//Sleep(time_ms);
 		int i=0;
 		while(i<time_ms){
@@ -131,6 +131,6 @@ void procDelay(int mode, long time_ms){ //ÔÚinterpreterµÄload,store,push,popµÈº¯
 	};
 }
 
-int delayMode=0; //0 ÎŞÑÓÊ±£»1ÓĞÑÓÊ±
+int delayMode=0; //0 æ— å»¶æ—¶ï¼›1æœ‰å»¶æ—¶
 
-int updateSysfun=1; //0 ÖØĞÂ»ã±àÏµÍ³³ÌĞò£»1 Ö±½Ó¶ÁÈ¡×Ö·ûÂëÎÄ¼ş
+int updateSysfun=1; //0 é‡æ–°æ±‡ç¼–ç³»ç»Ÿç¨‹åºï¼›1 ç›´æ¥è¯»å–å­—ç¬¦ç æ–‡ä»¶

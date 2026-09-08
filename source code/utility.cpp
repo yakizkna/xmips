@@ -30,14 +30,14 @@ void dispatcher::tool_pcbStatistics(){
 
 int Load(procptr pptr, char *s){
 	FILE *fo;		
-	char tmps[50]; //ÓÃÁË±£´æĞÂµÄÎÄ¼şÃû
+	char tmps[50]; //ç”¨äº†ä¿å­˜æ–°çš„æ–‡ä»¶å
 	char *p;
-	char ext[10]=".co"; //×Ö·ûÂëÎÄ¼şµÄÀ©Õ¹ÃûÎªco
+	char ext[10]=".co"; //å­—ç¬¦ç æ–‡ä»¶çš„æ‰©å±•åä¸ºco
 
 	strcpy(tmps,s);
 	p=tmps;
 
-	while(*p!='.') p++;	//½«×Ö·ûÂëÎÄ¼şµÄÀ©Õ¹Ãû¸ÄÎªxo
+	while(*p!='.') p++;	//å°†å­—ç¬¦ç æ–‡ä»¶çš„æ‰©å±•åæ”¹ä¸ºxo
 	*p='\0';
 	strcat(tmps,ext);
 	

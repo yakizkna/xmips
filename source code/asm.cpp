@@ -51,7 +51,7 @@ int assembler::trans(char *op, int line){	//translate aux to digit
 	if(!strcmp(op, "~"))     return 3; //comment
 	if(!strcmp(op, "CMNT") || !strcmp(op, "cmnt"))   return 3; //also comment
 	if(!strcmp(op, "$"))     return 0; //filler
-	if(!strcmp(op, ":"))	return 920001; //±êºÅÓï¾ä
+	if(!strcmp(op, ":"))	return 920001; //æ ‡å·è¯­å¥
 	if(!strcmp(op, "PROC") || !strcmp(op, "proc"))   return 920001; //use tag
 
 	//RES=50;
@@ -64,37 +64,37 @@ int assembler::trans(char *op, int line){	//translate aux to digit
 
 
 
-//ĞÎÊ½µØÖ·Éú³ÉÆ÷
-//&±íÊ¾Æ«ÒÆÑ°Ö·£¨Ö»ÄÜÏà¶ÔÓÚ¼Ä´æÆ÷1~9£©£¬È¨ÖµÎª8£¬²¢¼ÓÉÏ¼Ä´æÆ÷ºÅ³ËÒÔ100¡£Àı£º&3£¬¶ÔÓ¦µÄÖµÎª8+3*100=308
-//@±íÊ¾¼ä½ÓÑ°Ö·£¬È¨ÖµÎª4
-//#±íÊ¾¼Ä´æÆ÷Ñ°Ö·£¬È¨ÖµÎª2
-//£¡±íÊ¾Á¢¼´Êı£¬È¨ÖµÎª3
-//ÓÃÒ»¸öÕûĞÍÁ¿addressing´ø»ØÑ°Ö··½Ê½
-//¶àÖØÑ°Ö··½Ê½¿ÉÄÜÍ¬Ê±´æÔÚ£¬addressingÎªËùÓĞÑ°Ö··½Ê½È¨ÖµµÄºÍ
-//ÀıÈç &4@#2£¬°üº¬Æ«ÒÆÑ°Ö·£¬¼ä½ÓÑ°Ö·ºÍ¼Ä´æÆ÷Ñ°Ö·£¬EA=(R4)+(R2) addressing=8+4*100+4+2=414
-//&4#2 ÊÇÎŞĞ§µÄ£¬ÒòÎª¼Ä´æÆ÷2Ö»ÓĞ·ûºÅµØÖ·£¬Ã»ÓĞÊµ¼ÊµØÖ·!
+//å½¢å¼åœ°å€ç”Ÿæˆå™¨
+//&è¡¨ç¤ºåç§»å¯»å€ï¼ˆåªèƒ½ç›¸å¯¹äºå¯„å­˜å™¨1~9ï¼‰ï¼Œæƒå€¼ä¸º8ï¼Œå¹¶åŠ ä¸Šå¯„å­˜å™¨å·ä¹˜ä»¥100ã€‚ä¾‹ï¼š&3ï¼Œå¯¹åº”çš„å€¼ä¸º8+3*100=308
+//@è¡¨ç¤ºé—´æ¥å¯»å€ï¼Œæƒå€¼ä¸º4
+//#è¡¨ç¤ºå¯„å­˜å™¨å¯»å€ï¼Œæƒå€¼ä¸º2
+//ï¼è¡¨ç¤ºç«‹å³æ•°ï¼Œæƒå€¼ä¸º3
+//ç”¨ä¸€ä¸ªæ•´å‹é‡addressingå¸¦å›å¯»å€æ–¹å¼
+//å¤šé‡å¯»å€æ–¹å¼å¯èƒ½åŒæ—¶å­˜åœ¨ï¼Œaddressingä¸ºæ‰€æœ‰å¯»å€æ–¹å¼æƒå€¼çš„å’Œ
+//ä¾‹å¦‚ &4@#2ï¼ŒåŒ…å«åç§»å¯»å€ï¼Œé—´æ¥å¯»å€å’Œå¯„å­˜å™¨å¯»å€ï¼ŒEA=(R4)+(R2) addressing=8+4*100+4+2=414
+//&4#2 æ˜¯æ— æ•ˆçš„ï¼Œå› ä¸ºå¯„å­˜å™¨2åªæœ‰ç¬¦å·åœ°å€ï¼Œæ²¡æœ‰å®é™…åœ°å€!
 //&5@100 EA=(R5)+(100)
-//@!32 ÊÇÎŞĞ§µÄ£¬Á¢¼´Êı±ØĞëÖ±½ÓÊ¹ÓÃ!£¬Èç!5¡£
+//@!32 æ˜¯æ— æ•ˆçš„ï¼Œç«‹å³æ•°å¿…é¡»ç›´æ¥ä½¿ç”¨!ï¼Œå¦‚!5ã€‚
 int assembler::trans2(char *op, varNote *vp, int line,int &addressing){	//ptrflag = 1 means op is ptr var
 	int i;
-	char *ptmp=op;	//Ö¸Ïò²Ù×÷ÊıµØÖ·µÄÖ¸Õë
-	int advisit=0;	//ÓÃÓÚ¼ÆËãÑ°Ö··½Ê½
-	int ptrflag; //ÊÇ·ñ²ÉÓÃÁË¼ä½ÓÑ°Ö··½Ê½
+	char *ptmp=op;	//æŒ‡å‘æ“ä½œæ•°åœ°å€çš„æŒ‡é’ˆ
+	int advisit=0;	//ç”¨äºè®¡ç®—å¯»å€æ–¹å¼
+	int ptrflag; //æ˜¯å¦é‡‡ç”¨äº†é—´æ¥å¯»å€æ–¹å¼
 
 	addressing=0;
 
 	if(!strcmp(op,"$")){
 		addressing=0;	
-		return 0;	//Õ¼Î»·û£¬ÏÖÔÚÒÑ¾­¿ÉÒÔ²»ÓÃ
+		return 0;	//å ä½ç¬¦ï¼Œç°åœ¨å·²ç»å¯ä»¥ä¸ç”¨
 	}
 
-	if(*ptmp=='&'){	//Æ«ÒÆÑ°Ö·
+	if(*ptmp=='&'){	//åç§»å¯»å€
 		advisit+=8;	//
-		if(*(ptmp+1)>='1' && *(ptmp+1)<='9'){	//Ö»ÄÜÏà¶Ô¼Ä´æÆ÷1~9
-			advisit+=100*(*(ptmp+1)-'0');	//¼ÓÉÏ¼Ä´æÆ÷ºÅ³ËÒÔ100
-			ptmp+=2;		//Ö¸Ïò²Ù×÷Êı×Ö·û´®ÖĞµÄÏÂÒ»¸ö×Ö·û
+		if(*(ptmp+1)>='1' && *(ptmp+1)<='9'){	//åªèƒ½ç›¸å¯¹å¯„å­˜å™¨1~9
+			advisit+=100*(*(ptmp+1)-'0');	//åŠ ä¸Šå¯„å­˜å™¨å·ä¹˜ä»¥100
+			ptmp+=2;		//æŒ‡å‘æ“ä½œæ•°å­—ç¬¦ä¸²ä¸­çš„ä¸‹ä¸€ä¸ªå­—ç¬¦
 		}
-		else{	//±í´ïÊ½´íÎó£¬´íÎóµØÊ¹ÓÃÁË·ûºÅ&
+		else{	//è¡¨è¾¾å¼é”™è¯¯ï¼Œé”™è¯¯åœ°ä½¿ç”¨äº†ç¬¦å·&
 			RES=53;
 			if(systemChecker.showLevel(RES, sysLog)){
 				printf("D%-5d row:%d, operand:\'%s\' ",ID,line,op);
@@ -104,16 +104,16 @@ int assembler::trans2(char *op, varNote *vp, int line,int &addressing){	//ptrfla
 		}
 	}
 
-	if(*ptmp=='@'){	//¼ä½ÓÑ°Ö·
+	if(*ptmp=='@'){	//é—´æ¥å¯»å€
 		advisit+=4;
 		ptmp++;
-		ptrflag=1;	//±íÊ¾²ÉÓÃÁË¼ä½ÓÑ°Ö··½Ê½£¬
+		ptrflag=1;	//è¡¨ç¤ºé‡‡ç”¨äº†é—´æ¥å¯»å€æ–¹å¼ï¼Œ
 	}
 	
 	if(*ptmp=='#' || *ptmp=='!'){
 		//advisit+=2;!!!
-		if(*ptmp=='#'){	//¼Ä´æÆ÷Ñ°Ö·
-			if(advisit % 10==8){	//³öÏÖÁËÈç&4#2µÄĞÎÊ½£¬¸ÃĞÎÊ½ÊÇÎŞĞ§µÄ£¬ÒòÎª¼Ä´æÆ÷2Ö»ÓĞ·ûºÅµØÖ·£¬Ã»ÓĞÊµ¼ÊµØÖ·! 
+		if(*ptmp=='#'){	//å¯„å­˜å™¨å¯»å€
+			if(advisit % 10==8){	//å‡ºç°äº†å¦‚&4#2çš„å½¢å¼ï¼Œè¯¥å½¢å¼æ˜¯æ— æ•ˆçš„ï¼Œå› ä¸ºå¯„å­˜å™¨2åªæœ‰ç¬¦å·åœ°å€ï¼Œæ²¡æœ‰å®é™…åœ°å€! 
 				RES=54;
 				if(systemChecker.showLevel(RES, sysLog)){
 					printf("D%-5d row:%d, operand:\'%s\' ",ID,line,op);
@@ -121,7 +121,7 @@ int assembler::trans2(char *op, varNote *vp, int line,int &addressing){	//ptrfla
 				}
 				return -1;	
 			}
-			if( *(ptmp+1)>='0' && *(ptmp+1)<='9' ){	//'#'·ûºÅºó±ØĞëÎªÒ»¸ö´ú±í¼Ä´æÆ÷ºÅµÄÊı×Ö
+			if( *(ptmp+1)>='0' && *(ptmp+1)<='9' ){	//'#'ç¬¦å·åå¿…é¡»ä¸ºä¸€ä¸ªä»£è¡¨å¯„å­˜å™¨å·çš„æ•°å­—
 				int registerNO;
 				advisit+=2;
 				addressing=advisit;
@@ -138,7 +138,7 @@ int assembler::trans2(char *op, varNote *vp, int line,int &addressing){	//ptrfla
 				else
 					return registerNO;
 			}
-			else{	//¼Ä´æÆ÷Ñ°Ö·±í´ïÊ½´íÎó
+			else{	//å¯„å­˜å™¨å¯»å€è¡¨è¾¾å¼é”™è¯¯
 				RES=55;
 				if(systemChecker.showLevel(RES, sysLog)){
 					printf("D%-5d row:%d, operand:\'%s\' ",ID,line,op);
@@ -147,9 +147,9 @@ int assembler::trans2(char *op, varNote *vp, int line,int &addressing){	//ptrfla
 				return -1;
 			}
 		}
-		else{	//¸ÄÎªÖ÷´æÑ°Ö·!!! //Á¢¼´Êı
+		else{	//æ”¹ä¸ºä¸»å­˜å¯»å€!!! //ç«‹å³æ•°
 			/*
-			if((advisit-2)!=0){	//Á¢¼´ÊıÖ®Ç°³öÏÖÁËÆäËû·ûºÏ
+			if((advisit-2)!=0){	//ç«‹å³æ•°ä¹‹å‰å‡ºç°äº†å…¶ä»–ç¬¦åˆ
 				RES=56;
 				if(systemChecker.showLevel(RES, sysLog)){
 					printf("D%-5d row:%d, operand:\'%s\' ",ID,line,op);
@@ -161,17 +161,17 @@ int assembler::trans2(char *op, varNote *vp, int line,int &addressing){	//ptrfla
 
 			//advisit++;
 
-			//if(*(ptmp+1)=='-' || *(ptmp+1)=='+'|| (*(ptmp+1)>='0' && *(ptmp+1)<='9')){	//Á¢¼´ÊıµÄµÚÒ»¸ö×Ö·û±ØĞëÊÇÊı×Ö»òÕı¸ººÅ
+			//if(*(ptmp+1)=='-' || *(ptmp+1)=='+'|| (*(ptmp+1)>='0' && *(ptmp+1)<='9')){	//ç«‹å³æ•°çš„ç¬¬ä¸€ä¸ªå­—ç¬¦å¿…é¡»æ˜¯æ•°å­—æˆ–æ­£è´Ÿå·
 			//	addressing=advisit;
 			//	return atoi(ptmp+1);
 			//}
-			if((*(ptmp+1)>='0' && *(ptmp+1)<='9')){	//Á¢¼´ÊıµÄµÚÒ»¸ö×Ö·û±ØĞëÊÇÊı×Ö»òÕı¸ººÅ
+			if((*(ptmp+1)>='0' && *(ptmp+1)<='9')){	//ç«‹å³æ•°çš„ç¬¬ä¸€ä¸ªå­—ç¬¦å¿…é¡»æ˜¯æ•°å­—æˆ–æ­£è´Ÿå·
 				addressing=advisit;
 				return atoi(ptmp+1);
 			}
 
 
-			else{	//'!'·ûºÅÖ®ºóµÄ¸ñÊ½´íÎó
+			else{	//'!'ç¬¦å·ä¹‹åçš„æ ¼å¼é”™è¯¯
 				RES=57;
 				if(systemChecker.showLevel(RES, sysLog)){
 					printf("D%-5d row:%d, operand:\'%s\' ",ID,line,op);
@@ -182,18 +182,18 @@ int assembler::trans2(char *op, varNote *vp, int line,int &addressing){	//ptrfla
 		}
 	}
 
-	else{	//¸ÄÎªĞÎÊ½µØÖ·ÎªÖ÷´æ·ûºÅµØÖ·»òÕßÁ¢¼´Êı	//ĞÎÊ½µØÖ·¾ÍÊÇÖ÷´æµØÖ·£¨°üÀ¨·ûºÅµØÖ·£©
+	else{	//æ”¹ä¸ºå½¢å¼åœ°å€ä¸ºä¸»å­˜ç¬¦å·åœ°å€æˆ–è€…ç«‹å³æ•°	//å½¢å¼åœ°å€å°±æ˜¯ä¸»å­˜åœ°å€ï¼ˆåŒ…æ‹¬ç¬¦å·åœ°å€ï¼‰
 		i=0;
-		while(vp[i].valid==1){	//²éÕÒ·ûºÅµØÖ·±í
-			if(!strcmp(ptmp,vp[i].var)){	//¸Ã±êÊ¾·ûÊÇÒÑ¾­¶¨ÒåµÄ·ûºÅµØÖ·	
+		while(vp[i].valid==1){	//æŸ¥æ‰¾ç¬¦å·åœ°å€è¡¨
+			if(!strcmp(ptmp,vp[i].var)){	//è¯¥æ ‡ç¤ºç¬¦æ˜¯å·²ç»å®šä¹‰çš„ç¬¦å·åœ°å€	
 				addressing=advisit;
 				return vp[i].pos;
 			}
 			i++;
 		}
 
-		if(ptrflag==1 ){	//ÒÑ¾­Ê¹ÓÃÁË'@'·ûºÅ£¬µ«ÊÇÆäºóµÄ±êÊ¶·û²»ÊÇÒÑ¾­¶¨ÒåµÄ·ûºÅµØÖ·
-			if(*ptmp<'0' || *ptmp>'9'){	//Î´¶¨Òå±êÊ¶·û²»ÊÇÊı×Ö£¬³ö´í
+		if(ptrflag==1 ){	//å·²ç»ä½¿ç”¨äº†'@'ç¬¦å·ï¼Œä½†æ˜¯å…¶åçš„æ ‡è¯†ç¬¦ä¸æ˜¯å·²ç»å®šä¹‰çš„ç¬¦å·åœ°å€
+			if(*ptmp<'0' || *ptmp>'9'){	//æœªå®šä¹‰æ ‡è¯†ç¬¦ä¸æ˜¯æ•°å­—ï¼Œå‡ºé”™
 				RES=51;
 				if(systemChecker.showLevel(RES, sysLog)){
 					printf("D%-5d row:%d, operand:\'%s\' ",ID,line,op);
@@ -201,7 +201,7 @@ int assembler::trans2(char *op, varNote *vp, int line,int &addressing){	//ptrfla
 				}
 				return -1;
 			}
-			else{	//ÒÑĞŞ¸Ä¡£@7ÊÇ·Ç·¨µÄ£¬ÈÏÎª7ÊÇÁ¢¼´Êı£¬Ç°Ãæ²»¿É³öÏÖÆäËû·ûºÅ //Î´¶¨Òå±êÊ¶·ûÊÇÊı×Ö£¬ÆäÖ±½Ó²ÉÓÃÁË¼ä½ÓÑ°Ö·µÄ·½Ê½£¬Èç@7 EA=£¨7£©
+			else{	//å·²ä¿®æ”¹ã€‚@7æ˜¯éæ³•çš„ï¼Œè®¤ä¸º7æ˜¯ç«‹å³æ•°ï¼Œå‰é¢ä¸å¯å‡ºç°å…¶ä»–ç¬¦å· //æœªå®šä¹‰æ ‡è¯†ç¬¦æ˜¯æ•°å­—ï¼Œå…¶ç›´æ¥é‡‡ç”¨äº†é—´æ¥å¯»å€çš„æ–¹å¼ï¼Œå¦‚@7 EA=ï¼ˆ7ï¼‰
 				RES=56;
 				if(systemChecker.showLevel(RES, sysLog)){
 					printf("D%-5d row:%d, operand:\'%s\' ",ID,line,op);
@@ -210,7 +210,7 @@ int assembler::trans2(char *op, varNote *vp, int line,int &addressing){	//ptrfla
 				return -1;			
 			}
 		}
-		else{	//¸ÄÎª²Ù×÷ÊıÎªÁ¢¼´Êı //²Ù×÷Êı¾ÍÊÇÖ÷´æµØÖ·
+		else{	//æ”¹ä¸ºæ“ä½œæ•°ä¸ºç«‹å³æ•° //æ“ä½œæ•°å°±æ˜¯ä¸»å­˜åœ°å€
 			if(*ptmp=='+' || *ptmp=='-' || (*ptmp>='0' && *ptmp<='9')){
 				if(advisit !=0){
 					RES=56;
@@ -225,7 +225,7 @@ int assembler::trans2(char *op, varNote *vp, int line,int &addressing){	//ptrfla
 				return atoi(ptmp);	
 			}
 
-			RES=52; //³öÏÖÁËÎ´¶¨ÒåµÄ·ûºÅ£¬±í´ïÊ½·Ç·¨
+			RES=52; //å‡ºç°äº†æœªå®šä¹‰çš„ç¬¦å·ï¼Œè¡¨è¾¾å¼éæ³•
 			if(systemChecker.showLevel(RES, sysLog)){
 				printf("D%-5d row:%d, operand:\'%s\' ",ID,line,op);
 				systemChecker.check(RES, sysLog);
@@ -242,17 +242,17 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 	char op[20];
 	char od[20];
 	char os[20];
-	char comment[80]; //×¢ÊÍ
+	char comment[80]; //æ³¨é‡Š
 	int opcodeType=0; //with 0,1 or 2 operand
 	int addressing=0; //address visit way
 	int addressingUnion;	//used to handle double operand addressing
-	int i=0,j=0;	//i ¼ÇÂ¼Êµ¼ÊĞĞºÅ£¬j ¼ÇÂ¼ÏÔÊ¾ĞĞºÅ
-	int dataCounter=0;	//data dim counter. ¼ÇÂ¼±äÁ¿ÔÚÊı¾İ¶ÎÖĞµÄÎ»ÖÃ£¨´Ó0¿ªÊ¼£©
-	int state=0; //¼ÇÂ¼»ã±àÇé¿ö£¬0Î»Õı³££¬ÆäÓàÎª²»Õı³£¡£
+	int i=0,j=0;	//i è®°å½•å®é™…è¡Œå·ï¼Œj è®°å½•æ˜¾ç¤ºè¡Œå·
+	int dataCounter=0;	//data dim counter. è®°å½•å˜é‡åœ¨æ•°æ®æ®µä¸­çš„ä½ç½®ï¼ˆä»0å¼€å§‹ï¼‰
+	int state=0; //è®°å½•æ±‡ç¼–æƒ…å†µï¼Œ0ä½æ­£å¸¸ï¼Œå…¶ä½™ä¸ºä¸æ­£å¸¸ã€‚
 
 	int v=0;	//the var num
-	int tagv=0;	//±êºÅÏîĞòºÅ
-	int jmpv=0;	//Ìø×ªÏîĞòºÅ
+	int tagv=0;	//æ ‡å·é¡¹åºå·
+	int jmpv=0;	//è·³è½¬é¡¹åºå·
 
 	varNote varTable[20];	//max numbers of variables :20
 	varNote tagTable[20];	//tag table
@@ -261,27 +261,27 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 	if(displayMode) printf("display your statememts\n");
 	if(displayMode) printf("%-4d",j);
 
-	//fscanf(pfile,"%s%s",line,op);	//¶ÁÈ¡²Ù×÷Âë
-	fscanf(pfile,"%s",op);	//¶ÁÈ¡²Ù×÷Âë£¬È¡ÏûĞĞºÅ
+	//fscanf(pfile,"%s%s",line,op);	//è¯»å–æ“ä½œç 
+	fscanf(pfile,"%s",op);	//è¯»å–æ“ä½œç ï¼Œå–æ¶ˆè¡Œå·
 	o=A.trans(op,j);  //need to change; trans char to int opcode
-	opcodeType=o%10; //²Ù×÷Êı¸öÊı£¬×¢ÊÍµÄopcodeType=3
+	opcodeType=o%10; //æ“ä½œæ•°ä¸ªæ•°ï¼Œæ³¨é‡Šçš„opcodeType=3
 
 	switch(opcodeType){
 		case 0: d=s=0;
-			if(displayMode) printf("%s\n", op); //ÎŞ²Ù×÷Êı
+			if(displayMode) printf("%s\n", op); //æ— æ“ä½œæ•°
 			break;
 		case 1: s=0;
-			fscanf(pfile,"%s",od);	//µ¥²Ù×÷Êı£¬¶ÁÈ¡Ä¿µÄ²Ù×÷Êı
+			fscanf(pfile,"%s",od);	//å•æ“ä½œæ•°ï¼Œè¯»å–ç›®çš„æ“ä½œæ•°
 			if(displayMode) printf("%s %s\n",op,od);
 			break;
 		case 2: 
-			if(o!=910002){	//¶ÔÓÚdimÓï¾ä£¬ÌØÊâ´¦Àí
-				fscanf(pfile,"%s%s",od,os);	//Ë«²Ù×÷Êı£¬¶ÁÈ¡Ä¿µÄ²Ù×÷ÊıºÍÔ´²Ù×÷Êı
-				if(displayMode) printf("%s %s %s\n",op,od,os);	//¹ÊÒâÉÙÊä³öÒ»¸ö»»ĞĞ·û£¬ÓÃÓÚ·½Ãæ±äÁ¿¶¨ÒåÓï¾ä(ĞŞ¸Ä)
+			if(o!=910002){	//å¯¹äºdimè¯­å¥ï¼Œç‰¹æ®Šå¤„ç†
+				fscanf(pfile,"%s%s",od,os);	//åŒæ“ä½œæ•°ï¼Œè¯»å–ç›®çš„æ“ä½œæ•°å’Œæºæ“ä½œæ•°
+				if(displayMode) printf("%s %s %s\n",op,od,os);	//æ•…æ„å°‘è¾“å‡ºä¸€ä¸ªæ¢è¡Œç¬¦ï¼Œç”¨äºæ–¹é¢å˜é‡å®šä¹‰è¯­å¥(ä¿®æ”¹)
 			}
 			else{
-				fscanf(pfile,"%s%s",od,os);	//Ë«²Ù×÷Êı£¬¶ÁÈ¡Ä¿µÄ²Ù×÷ÊıºÍÔ´²Ù×÷Êı
-				if(displayMode) printf("%s %s %s ",op,od,os);	//¹ÊÒâÉÙÊä³öÒ»¸ö»»ĞĞ·û£¬ÓÃÓÚ·½Ãæ±äÁ¿¶¨ÒåÓï¾ä
+				fscanf(pfile,"%s%s",od,os);	//åŒæ“ä½œæ•°ï¼Œè¯»å–ç›®çš„æ“ä½œæ•°å’Œæºæ“ä½œæ•°
+				if(displayMode) printf("%s %s %s ",op,od,os);	//æ•…æ„å°‘è¾“å‡ºä¸€ä¸ªæ¢è¡Œç¬¦ï¼Œç”¨äºæ–¹é¢å˜é‡å®šä¹‰è¯­å¥
 			}
 			break;
 //		case 3:
@@ -291,17 +291,17 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 		default: ;
 	}
 
-	if(o!=910002 && o!=920001 && o!=3 && opcodeType != 0){//not loc statement and not comment. ¼ÆËãÑ°Ö··½Ê½
+	if(o!=910002 && o!=920001 && o!=3 && opcodeType != 0){//not loc statement and not comment. è®¡ç®—å¯»å€æ–¹å¼
 		if(opcodeType==1){
 			
-			if(o!=900421 && o!=900521 && o!=900621 && o!=900721 && o!=900821 && o!=904121){	//¶ÔÓÚÌø×ªÓï¾äºÍcall£¬²ÉÓÃ²»Í¬µÄ³öÀ´²Ù×÷ÊıµÄ·½Ê½
+			if(o!=900421 && o!=900521 && o!=900621 && o!=900721 && o!=900821 && o!=904121){	//å¯¹äºè·³è½¬è¯­å¥å’Œcallï¼Œé‡‡ç”¨ä¸åŒçš„å‡ºæ¥æ“ä½œæ•°çš„æ–¹å¼
 				d=A.trans2(od,varTable,j,addressing);	//trans char to int operand
 				addressingUnion=addressing;
 			}
 			//else
-			//	addressingUnion=3; //¶ÔÓÚÌø×ªÓï¾ä£¬±êºÅÏàµ±ÓÚÁ¢¼´Êı
+			//	addressingUnion=3; //å¯¹äºè·³è½¬è¯­å¥ï¼Œæ ‡å·ç›¸å½“äºç«‹å³æ•°
 		}
-		if(opcodeType==2 ){	//Ë«²Ù×÷Êı£¬¼ÆËã¸´ºÏÑ°Ö··½Ê½
+		if(opcodeType==2 ){	//åŒæ“ä½œæ•°ï¼Œè®¡ç®—å¤åˆå¯»å€æ–¹å¼
 			d=A.trans2(od,varTable,j,addressing);	//trans char to int operand
 			if(addressing==3){
 				RES=197;
@@ -319,11 +319,11 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 
 
 	while(o!=900000 && o!=-1 && i<codeBufferSize){	//900000:end, -1:syntax error
-		if(o==920001){//±êºÅ
+		if(o==920001){//æ ‡å·
 			//putchar('\n');
 			int m=0;
-			while(tagTable[m].valid!=0){ //±£´æ±êºÅ
-				if(!strcmp(od,tagTable[m].var)){ //±êºÅÖØ¸´
+			while(tagTable[m].valid!=0){ //ä¿å­˜æ ‡å·
+				if(!strcmp(od,tagTable[m].var)){ //æ ‡å·é‡å¤
 					RES=193;
 					if(systemChecker.showLevel(RES, sysLog)){
 						printf("D%-5d repeated tag:%s ",ID,od);
@@ -335,7 +335,7 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 				m++;
 			}
 			
-			//½«±êºÅĞÅÏ¢¼ÇÈë±êºÅ±í
+			//å°†æ ‡å·ä¿¡æ¯è®°å…¥æ ‡å·è¡¨
 			strcpy(tagTable[tagv].var,od);	//note the var name
 			tagTable[tagv].pos=i;	//note the var pos
 			tagTable[tagv].valid=1;		//valid==1 means the position in varTable has been used
@@ -343,7 +343,7 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 
 		}
 		else
-		if(o==900421 || o==900521 || o==900621 || o==900721 || o==900821 || o==904121){	//½«Ìø×ªĞÅÏ¢¼ÇÈëÌø×ª±í
+		if(o==900421 || o==900521 || o==900621 || o==900721 || o==900821 || o==904121){	//å°†è·³è½¬ä¿¡æ¯è®°å…¥è·³è½¬è¡¨
 			strcpy(jumpTable[jmpv].var,od);
 			jumpTable[jmpv].pos=i;
 			jumpTable[jmpv].valid=1;
@@ -352,7 +352,7 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 			//putchar('\n');
 			codeBuffer[i]=o;	//write to codeBuffer
 			codeBuffer[i+1]=3;	//visit address way, immediate 3
-			codeBuffer[i+3]=0;	//Ã»ÓĞÔ´²Ù×÷Êı
+			codeBuffer[i+3]=0;	//æ²¡æœ‰æºæ“ä½œæ•°
 			//pptr->MCode.write(i,o);	//write to MCode
 			//pptr->MCode.write(i+1,3);	//visit address way, immediate 3
 			//pptr->MCode.write(i+2,d);
@@ -366,7 +366,7 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 			
 				int t=0;
 				while(varTable[t].valid!=0){
-					if(!strcmp(od,varTable[t].var)){ //±äÁ¿ÖØ¸´
+					if(!strcmp(od,varTable[t].var)){ //å˜é‡é‡å¤
 						RES=196;
 						if(systemChecker.showLevel(RES, sysLog)){
 							printf("D%-5d repeated indentifier:%s ",ID,od);
@@ -385,16 +385,16 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 				v++;
 				
 				
-				int len;	//ÉùÃ÷µÄÊı×éµÄ³¤¶È
-				int dataNum;	//¸³³õÖµµÄÊı×éÔªËØµÄ¸öÊı+µ±Ç°Êı¾İ¶ÎÖĞµÄÆ«ÒÆÁ¿
-				char dataValue[40];	//³õÖµ×Ö·û´®
-				char fc;	//ÓÃÓÚ¶ÁÈ¡ÎÄ¼şÖĞ³õÖµµÄ×Ö·û
+				int len;	//å£°æ˜çš„æ•°ç»„çš„é•¿åº¦
+				int dataNum;	//èµ‹åˆå€¼çš„æ•°ç»„å…ƒç´ çš„ä¸ªæ•°+å½“å‰æ•°æ®æ®µä¸­çš„åç§»é‡
+				char dataValue[40];	//åˆå€¼å­—ç¬¦ä¸²
+				char fc;	//ç”¨äºè¯»å–æ–‡ä»¶ä¸­åˆå€¼çš„å­—ç¬¦
 				int i=0;
-				char *cp;	//³õÖµ×Ö·û´®Ö¸Õë
-				int cflag=0;	//±íÊ¾Ò»¸ö³õÖµÊÇ·ñ½áÊø£¬ÒÔ¶ººÅ·Ö¸ô
-				int k;	//½«³õÖµ×Ö·û´®ÖĞµÄ³õÖµ×ª»»³ÉÕûÊı
+				char *cp;	//åˆå€¼å­—ç¬¦ä¸²æŒ‡é’ˆ
+				int cflag=0;	//è¡¨ç¤ºä¸€ä¸ªåˆå€¼æ˜¯å¦ç»“æŸï¼Œä»¥é€—å·åˆ†éš”
+				int k;	//å°†åˆå€¼å­—ç¬¦ä¸²ä¸­çš„åˆå€¼è½¬æ¢æˆæ•´æ•°
 				
-				if(os[0]=='D'){	//±íÊ¾¶¨ÒåµÄÊÇÊı×é
+				if(os[0]=='D'){	//è¡¨ç¤ºå®šä¹‰çš„æ˜¯æ•°ç»„
 					len=atoi(os+1);
 					dataNum=dataCounter;
 					dataCounter+=len;
@@ -402,19 +402,19 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 
 					fc=fgetc(pfile);
 
-					while(fc!=';'){	//³õÖµ×Ö·û´®ÒÔ·ÖºÅ½áÊø
-						dataValue[i]=fc;	//½«´ÓÎÄ¼şÖĞ¶ÁÈ¡µÄ×Ö·û±£´æµ½Êı×é
-						fc=fgetc(pfile);	//¶ÁÏÂÒ»¸ö×Ö·û
+					while(fc!=';'){	//åˆå€¼å­—ç¬¦ä¸²ä»¥åˆ†å·ç»“æŸ
+						dataValue[i]=fc;	//å°†ä»æ–‡ä»¶ä¸­è¯»å–çš„å­—ç¬¦ä¿å­˜åˆ°æ•°ç»„
+						fc=fgetc(pfile);	//è¯»ä¸‹ä¸€ä¸ªå­—ç¬¦
 						i++;
 					}
-					dataValue[i]=';';	//ÔÚ×Ö·û´®Ä©Î²¼ÓÉÏ·ÖºÅ£¬±íÊ¾³õÖµ¶ÁÍê
-					dataValue[i+1]='\0';	//±íÊ¾×Ö·û´®½áÊø
+					dataValue[i]=';';	//åœ¨å­—ç¬¦ä¸²æœ«å°¾åŠ ä¸Šåˆ†å·ï¼Œè¡¨ç¤ºåˆå€¼è¯»å®Œ
+					dataValue[i+1]='\0';	//è¡¨ç¤ºå­—ç¬¦ä¸²ç»“æŸ
 					
-					cp=dataValue;	//½«cpÖ¸Ïò³õÖµ×Ö·û´®µÄµÚÒ»¸ö×Ö·û
+					cp=dataValue;	//å°†cpæŒ‡å‘åˆå€¼å­—ç¬¦ä¸²çš„ç¬¬ä¸€ä¸ªå­—ç¬¦
 
-					while(*cp!=';'){//³õÖµ×Ö·û´®ÒÔ·ÖºÅ½áÊø
+					while(*cp!=';'){//åˆå€¼å­—ç¬¦ä¸²ä»¥åˆ†å·ç»“æŸ
 						if(((*cp>='0' && *cp <='9' ) || *cp=='-' || *cp=='+' || *cp=='\?' ) && cflag==0 ){
-							if(dataNum+1>dataCounter){	//ÒÑ¾­¶ÁÈ¡µÄ³õÖµÊı³¬¹ıÁËÉêÃ÷Ê±¶¨ÒåµÄÊı×é³¤¶È£¬±¨´í
+							if(dataNum+1>dataCounter){	//å·²ç»è¯»å–çš„åˆå€¼æ•°è¶…è¿‡äº†ç”³æ˜æ—¶å®šä¹‰çš„æ•°ç»„é•¿åº¦ï¼ŒæŠ¥é”™
 								putchar('\n');
 								RES=191;
 								if(systemChecker.showLevel(RES, sysLog)){
@@ -424,34 +424,34 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 								state=3;
 								break;
 							}	
-							k=atoi(cp);	//½«³õÖµ×Ö·û´®ÖĞµÄ³õÖµ×ª»»³ÉÕûÊı
-							//pptr->MData.write(dataNum,k); //½«³õÖµ±£´æµ½Êı¾İ¶Î
+							k=atoi(cp);	//å°†åˆå€¼å­—ç¬¦ä¸²ä¸­çš„åˆå€¼è½¬æ¢æˆæ•´æ•°
+							//pptr->MData.write(dataNum,k); //å°†åˆå€¼ä¿å­˜åˆ°æ•°æ®æ®µ
 							dataBuffer[dataNum]=k;
-							dataNum++;	//¶ÁÈ¡µÄ×Ö·ûÊı¼Ó1
+							dataNum++;	//è¯»å–çš„å­—ç¬¦æ•°åŠ 1
 							//printf("%d",k);
 							cflag=1;
 						}
 						else
-							if(*cp==','){	//¶Áµ½ÁË·Ö¸ô×Ö·û¶ººÅ
-								cflag=0;	//±íÊ¾Ò»¸ö³õÖµ¶ÁÍê
+							if(*cp==','){	//è¯»åˆ°äº†åˆ†éš”å­—ç¬¦é€—å·
+								cflag=0;	//è¡¨ç¤ºä¸€ä¸ªåˆå€¼è¯»å®Œ
 							}
 
-						cp++;	//Ö¸Ïò³õÖµ×Ö·û´®ÖĞµÄÏÂÒ»¸ö×Ö·û
+						cp++;	//æŒ‡å‘åˆå€¼å­—ç¬¦ä¸²ä¸­çš„ä¸‹ä¸€ä¸ªå­—ç¬¦
 					}
 					
 					printf("%s\n",dataValue);
-					dataNum=0;	//È«²¿¶ÁÍêºó¶ÁÈ¡µÄ³õÖµÊı¹é0
+					dataNum=0;	//å…¨éƒ¨è¯»å®Œåè¯»å–çš„åˆå€¼æ•°å½’0
 				}
 				else{
 					putchar('\n');
-					if((os[0]>='0' && os[0] <='9' ) || os[0]=='-' || os[0]=='+' || os[0]=='\?'){	//ÉùÃ÷µÄÊÇÒ»¸ö×Ö·ûµØÖ·£¨Ò»¸ö±äÁ¿£©,ÎÊºÅÎª³õÖµ²»È·¶¨
+					if((os[0]>='0' && os[0] <='9' ) || os[0]=='-' || os[0]=='+' || os[0]=='\?'){	//å£°æ˜çš„æ˜¯ä¸€ä¸ªå­—ç¬¦åœ°å€ï¼ˆä¸€ä¸ªå˜é‡ï¼‰,é—®å·ä¸ºåˆå€¼ä¸ç¡®å®š
 						int k;
-						k=atoi(os);	//¶ÁÈ¡±äÁ¿µÄÖµ
-						//pptr->MData.write(dataCounter,k); //½«±äÁ¿Ğ´µÀÊı¾İ¶Î
+						k=atoi(os);	//è¯»å–å˜é‡çš„å€¼
+						//pptr->MData.write(dataCounter,k); //å°†å˜é‡å†™é“æ•°æ®æ®µ
 						dataBuffer[dataCounter]=k;
 						dataCounter++;
 					}
-					else{	//¸ñÊ½·Ç·¨
+					else{	//æ ¼å¼éæ³•
 						RES=192;
 						if(systemChecker.showLevel(RES, sysLog)){
 							printf("D%-5d ",ID);
@@ -463,7 +463,7 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 	
 
 			}
-			else{	//·Ç·¨·ûºÅµØÖ·
+			else{	//éæ³•ç¬¦å·åœ°å€
 				//putchar('\n');
 				RES=13;
 				if(systemChecker.showLevel(RES, sysLog)){
@@ -484,7 +484,7 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 				//putchar('\n');
 				//pptr->MCode.write(i,o);	//write to MCode
 				
-				if(o==800000) addressingUnion=d=s=0;	//¶ÔÓÚÍ£»úÓï¾äÒªÌØÊâ´¦Àí£¬ÉèÖÃÍ£»úÓï¾äÊÇÎªÁË·½±ã»ã±àÊÇ¶Ô×Ó³ÌĞòµÄ´¦Àí
+				if(o==800000) addressingUnion=d=s=0;	//å¯¹äºåœæœºè¯­å¥è¦ç‰¹æ®Šå¤„ç†ï¼Œè®¾ç½®åœæœºè¯­å¥æ˜¯ä¸ºäº†æ–¹ä¾¿æ±‡ç¼–æ˜¯å¯¹å­ç¨‹åºçš„å¤„ç†
 
 				codeBuffer[i]=o;
 				//pptr->MCode.write(i+1,addressingUnion);	//visit address way
@@ -507,20 +507,20 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 
 		switch(opcodeType){
 			case 0: d=s=0;
-				if(displayMode) printf("%s\n", op); //ÎŞ²Ù×÷Êı
+				if(displayMode) printf("%s\n", op); //æ— æ“ä½œæ•°
 				break;
 			case 1: s=0;
-				fscanf(pfile,"%s",od);	//µ¥²Ù×÷Êı£¬¶ÁÈ¡Ä¿µÄ²Ù×÷Êı
+				fscanf(pfile,"%s",od);	//å•æ“ä½œæ•°ï¼Œè¯»å–ç›®çš„æ“ä½œæ•°
 				if(displayMode) printf("%s %s\n",op,od);
 				break;
 			case 2: 
-				if(o!=910002){	//¶ÔÓÚdimÓï¾ä£¬ÌØÊâ´¦Àí
-					fscanf(pfile,"%s%s",od,os);	//Ë«²Ù×÷Êı£¬¶ÁÈ¡Ä¿µÄ²Ù×÷ÊıºÍÔ´²Ù×÷Êı
-					if(displayMode) printf("%s %s %s\n",op,od,os);	//¹ÊÒâÉÙÊä³öÒ»¸ö»»ĞĞ·û£¬ÓÃÓÚ·½Ãæ±äÁ¿¶¨ÒåÓï¾ä(ĞŞ¸Ä)
+				if(o!=910002){	//å¯¹äºdimè¯­å¥ï¼Œç‰¹æ®Šå¤„ç†
+					fscanf(pfile,"%s%s",od,os);	//åŒæ“ä½œæ•°ï¼Œè¯»å–ç›®çš„æ“ä½œæ•°å’Œæºæ“ä½œæ•°
+					if(displayMode) printf("%s %s %s\n",op,od,os);	//æ•…æ„å°‘è¾“å‡ºä¸€ä¸ªæ¢è¡Œç¬¦ï¼Œç”¨äºæ–¹é¢å˜é‡å®šä¹‰è¯­å¥(ä¿®æ”¹)
 				}
 				else{
-					fscanf(pfile,"%s%s",od,os);	//Ë«²Ù×÷Êı£¬¶ÁÈ¡Ä¿µÄ²Ù×÷ÊıºÍÔ´²Ù×÷Êı
-					if(displayMode) printf("%s %s %s ",op,od,os);	//¹ÊÒâÉÙÊä³öÒ»¸ö»»ĞĞ·û£¬ÓÃÓÚ·½Ãæ±äÁ¿¶¨ÒåÓï¾ä
+					fscanf(pfile,"%s%s",od,os);	//åŒæ“ä½œæ•°ï¼Œè¯»å–ç›®çš„æ“ä½œæ•°å’Œæºæ“ä½œæ•°
+					if(displayMode) printf("%s %s %s ",op,od,os);	//æ•…æ„å°‘è¾“å‡ºä¸€ä¸ªæ¢è¡Œç¬¦ï¼Œç”¨äºæ–¹é¢å˜é‡å®šä¹‰è¯­å¥
 				}
 				break;
 //			case 3:
@@ -533,7 +533,7 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 		if(o!=910002 && o!=920001 && o!=3 && opcodeType != 0){//not loc statement and not comment 
 			
 			if(opcodeType==1){
-				if(o!=900421 && o!=900521 && o!=900621 && o!=900721 && o!=900821 && o!=904121){	//¶ÔÓÚÌø×ªÓï¾äºÍcall£¬²ÉÓÃ²»Í¬µÄ³öÀ´²Ù×÷ÊıµÄ·½Ê½
+				if(o!=900421 && o!=900521 && o!=900621 && o!=900721 && o!=900821 && o!=904121){	//å¯¹äºè·³è½¬è¯­å¥å’Œcallï¼Œé‡‡ç”¨ä¸åŒçš„å‡ºæ¥æ“ä½œæ•°çš„æ–¹å¼
 					d=A.trans2(od,varTable,j,addressing);	//trans char to int operand
 					addressingUnion=addressing;
 				}
@@ -574,20 +574,20 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 		//}		
 	}//while(o!=900000 && o!=-1 && i<pptr->MCode.mSize) end
 
-	//putchar('\n');	//²¹ÉÏÒ»¸ö»»ĞĞ·û
+	//putchar('\n');	//è¡¥ä¸Šä¸€ä¸ªæ¢è¡Œç¬¦
 
 	if(o==900000 && state==0){	//normal end
-		//ÏÂÃæĞŞ¸ÄÌø×ª±êÊ¶
+		//ä¸‹é¢ä¿®æ”¹è·³è½¬æ ‡è¯†
 		int m=0;
 		int n=0;
-		while(tagTable[m].valid!=0){ //¶ÔÕÕ±êºÅ±íºÍÌø×ª±í£¬°ÑÌø×ªÎ»ÖÃĞ´Èë´úÂë¶Î£¬ Ïê¼ûÎÄµµ¡¶±êºÅÓëÌø×ª¡·
+		while(tagTable[m].valid!=0){ //å¯¹ç…§æ ‡å·è¡¨å’Œè·³è½¬è¡¨ï¼ŒæŠŠè·³è½¬ä½ç½®å†™å…¥ä»£ç æ®µï¼Œ è¯¦è§æ–‡æ¡£ã€Šæ ‡å·ä¸è·³è½¬ã€‹
 			n=0;
 			while(jumpTable[n].valid!=0){
 				if(jumpTable[n].found==0){
 					if(!strcmp(jumpTable[n].var,tagTable[m].var)){
 						//pptr->MCode.write(jumpTable[n].pos+2,tagTable[m].pos);
 						codeBuffer[jumpTable[n].pos+2]=tagTable[m].pos;
-						jumpTable[n].found=1;	//±íÊ¾¸ÃÌø×ªÎ»ÖÃĞ´Èë
+						jumpTable[n].found=1;	//è¡¨ç¤ºè¯¥è·³è½¬ä½ç½®å†™å…¥
 					}	
 				}
 				n++;
@@ -596,7 +596,7 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 		}
 
 		m=0;
-		while(jumpTable[m].valid!=0){	//²é¿´Ê±ºòÓĞÃ»ÓĞ¶ÔÓ¦±êºÅµÄÌø×ªÏî
+		while(jumpTable[m].valid!=0){	//æŸ¥çœ‹æ—¶å€™æœ‰æ²¡æœ‰å¯¹åº”æ ‡å·çš„è·³è½¬é¡¹
 			if(jumpTable[m].found==0){
 				RES=194;
 				if(systemChecker.showLevel(RES, sysLog)){
@@ -614,7 +614,7 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 		codeBuffer[i]=o;
 
 		i++;
-		dataNumInMData=dataCounter; //Êı¾İ¶ÎÖĞÊı¾İµÄ¸öÊı
+		dataNumInMData=dataCounter; //æ•°æ®æ®µä¸­æ•°æ®çš„ä¸ªæ•°
 		return i;
 
 	}
@@ -628,7 +628,7 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 			}
 		}
 		else
-			if(state==0){	//ÄÚÈİÌ«¶à,³¬¹ıÁË´úÂë»º³åÇøµÄ´óĞ¡			
+			if(state==0){	//å†…å®¹å¤ªå¤š,è¶…è¿‡äº†ä»£ç ç¼“å†²åŒºçš„å¤§å°			
 				RES=15;
 				if(systemChecker.showLevel(RES, sysLog)){
 				printf("D%-5d numbers of lines:%d ",ID,i/4);
@@ -642,24 +642,24 @@ int editor::editorFromFile(FILE *pfile, assembler &A, int &dataNumInMData){	//ed
 
 int editor::ASM(FILE *pfile, assembler &A, char *s){
 	int r;
-	int dataInMData;	//Êı¾İ¶ÎÊı¾İµÄÊıÄ¿
+	int dataInMData;	//æ•°æ®æ®µæ•°æ®çš„æ•°ç›®
 	r=editorFromFile(pfile,A,dataInMData);
 	if(r==-1) return -1; //editor abend
 	else{
 		//saveToFile(pptr,r,dataInMData);
 		FILE *fsave;		
-		char tmps[50]; //ÓÃÁË±£´æĞÂµÄÎÄ¼şÃû
+		char tmps[50]; //ç”¨äº†ä¿å­˜æ–°çš„æ–‡ä»¶å
 		char *p;
-		char ext[10]=".co"; //×Ö·ûÂëÎÄ¼şµÄÀ©Õ¹ÃûÎªco
+		char ext[10]=".co"; //å­—ç¬¦ç æ–‡ä»¶çš„æ‰©å±•åä¸ºco
 
 		strcpy(tmps,s);
 		p=tmps;
 
-		while(*p!='.') p++;	//½«×Ö·ûÂëÎÄ¼şµÄÀ©Õ¹Ãû¸ÄÎªxo
+		while(*p!='.') p++;	//å°†å­—ç¬¦ç æ–‡ä»¶çš„æ‰©å±•åæ”¹ä¸ºxo
 		*p='\0';
 		strcat(tmps,ext);
 		
-		if((fsave=fopen(tmps, "w"))==0){	//ÎÄ¼ş´ò¿ªÊ§°Ü
+		if((fsave=fopen(tmps, "w"))==0){	//æ–‡ä»¶æ‰“å¼€å¤±è´¥
 			RES=195;
 			if(systemChecker.showLevel(RES, sysLog)){
 				printf("D%-5d ",ID);
@@ -675,7 +675,7 @@ int editor::ASM(FILE *pfile, assembler &A, char *s){
 			fprintf(fsave,"%d ",codeBuffer[i]);
 		}
 
-		fprintf(fsave,"%d ",dataInMData); //°ÑÊı¾İ³¤¶ÈĞ´½øÎÄ¼ş£¬·½±ã¶ÁĞ´
+		fprintf(fsave,"%d ",dataInMData); //æŠŠæ•°æ®é•¿åº¦å†™è¿›æ–‡ä»¶ï¼Œæ–¹ä¾¿è¯»å†™
 
 		for(i=0; i<dataInMData ; i++){
 			fprintf(fsave,"%d ",dataBuffer[i]);
