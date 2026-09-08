@@ -1,0 +1,40 @@
+~ INT_10
+~ bubble sort
+~ #11: array start address
+~ #12: array length
+~ #0: a[i] pointer
+~ #1: a[i+1] pointer
+~ #2: swap temp
+~ #3: round end
+~ #4: array end address
+~ params via #11,#12
+MOV #4 #11
+ADD #4 #12
+SUB #4 1
+MOV #0 #11
+MOV #1 #11
+INC #1
+MOV #3 #4
+: L2
+CMP @#0 @#1
+JA L1
+~ swap
+MOV #2 @#0
+MOV @#0 @#1
+MOV @#1 #2
+: L1
+INC #0
+INC #1
+CMP #0 #3
+JB L2
+~ next round
+MOV #0 #11
+MOV #1 #11
+INC #1
+SUB #3 1
+CMP #3 0
+JNE L2
+~ done, IRET mode 0
+MOV #10 0
+IRET
+END

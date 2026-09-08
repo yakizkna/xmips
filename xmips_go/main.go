@@ -40,6 +40,38 @@ func config() int {
 			reportLevel = r
 		case "updateSysfun":
 			updateSysfun = r
+		case "codeSize":
+			if r > 0 {
+				codeSize = r
+			}
+		case "dataSize":
+			if r > 0 {
+				dataSize = r
+			}
+		case "stackSize":
+			if r > 0 {
+				stackSize = r
+			}
+		case "sysfunCodeSize":
+			if r > 0 {
+				sysfunCodeSize = r
+			}
+		case "sysfunDataSize":
+			if r > 0 {
+				sysfunDataSize = r
+			}
+		case "sysfunStackSize":
+			if r > 0 {
+				sysfunStackSize = r
+			}
+		case "cycleTimes":
+			if r > 0 {
+				cycleTimes = r
+			}
+		case "pcbNum":
+			if r > 0 {
+				pcbNum = r
+			}
 		}
 	}
 	return 0
@@ -71,10 +103,10 @@ func main() {
 	}
 
 	// 构建硬件/系统对象
-	im := newInterpreter(101, 30, 10, 20)
-	e := newEditor(103, 200)
+	im := newInterpreter(101, cycleTimes, 10, 20)
+	e := newEditor(103, codeSize, dataSize)
 	a := newAssembler(102)
-	os_ := newDispatcher(105, 10, 30, 40)
+	os_ := newDispatcher(105, 10, 30, pcbNum)
 	sys := newStorage(106, sysPath[0])
 	disk := newStorage(107, sysPath[1])
 
@@ -83,10 +115,13 @@ func main() {
 	{
 		pptr := make([]*Process, sysFunNumber)
 		// 进程模板：代码段大、数据段小、高优先级
-		tp := newProcess(0, 100, 10, 40, 0)
+		tp := newProcess(0, sysfunCodeSize, sysfunDataSize, sysfunStackSize, 0)
 
 		for i := 0; i < sysFunNumber; i++ {
-			pptr[i] = newProcess(0, 100, 10, 40, 0)
+			if sysFunTable[i] == "" {
+				continue
+			}
+			pptr[i] = newProcess(0, sysfunCodeSize, sysfunDataSize, sysfunStackSize, 0)
 			pptr[i].copy(tp)
 			pptr[i].ID = i
 
@@ -130,9 +165,11 @@ func main() {
 		for name != "end" && name != "END" {
 			pfr, ret2 := disk.getFile(name, 0)
 			if ret2 == 0 {
-				pptr := newProcess(0, 100, 40, 50, 1)
+				pptr := newProcess(0, codeSize, dataSize, stackSize, 1)
 				pptr.ID = id
-				fmt.Printf("process ID:%d\n", pptr.ID)
+				if displayMode != 2 {
+					fmt.Printf("process ID:%d\n", pptr.ID)
+				}
 
 				if e.ASM(pfr, a, name) != -1 {
 					Load(pptr, name)
@@ -157,6 +194,10 @@ func main() {
 	//*************************************************************************************************************
 	// 显示已结束进程的数据段
 	{
+		if displayMode == 2 {
+			// displayMode=2：不显示任何额外内容，直接结束
+			return
+		}
 		var pptr *Process
 		r := os_.Finished.deQueue(&pptr)
 

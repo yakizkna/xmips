@@ -1,18 +1,20 @@
 package main
 
+import "fmt"
+
 // I/O 寄存器编号（占用 GM 中的预留寄存器，通过系统调用访问）
 const outputReg = 13 // #13: 输出寄存器
 const inputReg = 14  // #14: 输入寄存器
 
 // Interpreter 解释执行器，对应 C++ 的 interpreter 类
 type Interpreter struct {
-	ID          int
-	cycleTimes  int
-	MRgst       *Memory // 内部寄存器组，用于寄存器编码和临时存储
-	GM          *Memory // 通用寄存器组（0~16，其中15=目的操作数，16=源操作数）
-	GMNumber    int
-	flag        int // 状态标志寄存器
-	PC          int // 指令计数器
+	ID         int
+	cycleTimes int
+	MRgst      *Memory // 内部寄存器组，用于寄存器编码和临时存储
+	GM         *Memory // 通用寄存器组（0~16，其中15=目的操作数，16=源操作数）
+	GMNumber   int
+	flag       int // 状态标志寄存器
+	PC         int // 指令计数器
 }
 
 func newInterpreter(key, cc, regNum, GMNum int) *Interpreter {
@@ -51,6 +53,34 @@ func (im *Interpreter) pop(s *Stack) int {
 	return s.pop()
 }
 
+// isInt14 当前进程是否为 INT 14 输入系统函数
+// 系统函数进程 ID = sysFunTable 索引 = 系统调用号-10（INT 14 → ID 4），且 callerID 指向调用者
+func (im *Interpreter) isInt14(proc *Process) bool {
+	return proc.callerID != 0 && proc.ID == inputReg-10
+}
+
+// readGM 读取通用寄存器
+// 输入寄存器 #14 只允许 INT 14 系统函数读取（从 stdin 读一个字符，EOF 返回 0）；
+// 其他进程读 #14 属于非法访问，报错并返回 0
+func (im *Interpreter) readGM(n int, proc *Process) int {
+	if n == inputReg {
+		if !im.isInt14(proc) {
+			RES = 198
+			if systemChecker.showLevel(RES, sysLog[:]) {
+				printf("D%-5d process ID:%d, illegal access to input register #14 ", im.ID, proc.ID)
+				systemChecker.check(RES, sysLog[:])
+			}
+			return 0
+		}
+		b, err := stdinReader.ReadByte()
+		if err != nil {
+			return 0 // EOF
+		}
+		return int(b)
+	}
+	return im.GM.read(n)
+}
+
 // effectAddressing 计算有效地址
 // addcode: 寻址方式编码, fadd: 形式地址, proc: 进程
 // RorM: 0=在内存中, 1=在寄存器中, 2=立即数
@@ -72,13 +102,13 @@ func (im *Interpreter) effectAddressing(addcode, fadd int, proc *Process, RorM *
 	case 4:
 		EA = proc.MData.read(fadd)
 	case 6:
-		EA = im.GM.read(fadd)
+		EA = im.readGM(fadd, proc)
 	case 8:
-		EA = im.GM.read(R) + fadd
+		EA = im.readGM(R, proc) + fadd
 	case 12:
-		EA = im.GM.read(R) + proc.MData.read(fadd)
+		EA = im.readGM(R, proc) + proc.MData.read(fadd)
 	case 14:
-		EA = im.GM.read(R) + im.GM.read(fadd)
+		EA = im.readGM(R, proc) + im.readGM(fadd, proc)
 	default:
 		printf("error!")
 		return -1
@@ -161,10 +191,10 @@ func (im *Interpreter) exer(proc *Process) int {
 
 		// 寄存器操作数直接取
 		if im.MRgst.read(3) == 1 {
-			im.GM.mem[15] = im.GM.mem[im.MRgst.read(2)]
+			im.GM.mem[15] = im.readGM(im.MRgst.read(2), proc)
 		}
 		if im.MRgst.read(5) == 1 {
-			im.GM.mem[16] = im.GM.mem[im.MRgst.read(4)]
+			im.GM.mem[16] = im.readGM(im.MRgst.read(4), proc)
 		}
 		if im.MRgst.read(3) == 2 {
 			im.GM.mem[15] = im.MRgst.read(2)
@@ -316,6 +346,11 @@ func (im *Interpreter) exer(proc *Process) int {
 		}
 		if tmp_dataLS == 1 && im.MRgst.read(3) == 1 {
 			im.GM.mem[im.MRgst.read(2)] = im.GM.mem[15]
+			// 写入输出寄存器 #13：立即按字符输出到 stdout
+			// （INT 14 系统函数内 #13 用作返回标志，不触发输出）
+			if im.MRgst.read(2) == outputReg && !im.isInt14(proc) {
+				fmt.Printf("%c", im.GM.mem[15])
+			}
 		}
 
 		im.load(im.MRgst, 0, proc.MCode, im.PC)

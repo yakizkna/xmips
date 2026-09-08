@@ -1,0 +1,26 @@
+~ INT_14
+~ input: read chars from #14 (stdin) into buffer
+~ #11: buffer start address in data segment
+~ #12: buffer size
+~ return: #13=0 read EOF(0); #13=1 buffer full (caller can continue reading)
+MOV #1 0
+: LOOP
+CMP #1 #12
+JE FULL
+MOV #0 #14
+MOV #2 0
+CMP #0 #2
+JE EOF
+MOV @#11 #0
+INC #11
+INC #1
+JMP LOOP
+: FULL
+MOV #13 1
+MOV #10 0
+IRET
+: EOF
+MOV #13 0
+MOV #10 0
+IRET
+END

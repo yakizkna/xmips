@@ -8,6 +8,69 @@ import (
 	"strings"
 )
 
+// tokenReader 逐行读取文件，按空白分割成 token，支持跳过行剩余部分
+type tokenReader struct {
+	scanner *bufio.Scanner
+	tokens  []string
+	pos     int
+	curLine string // 当前行完整文本（用于显示注释等）
+}
+
+func newTokenReader(scanner *bufio.Scanner) *tokenReader {
+	return &tokenReader{scanner: scanner}
+}
+
+// fill 读取下一行并分割成 tokens
+func (tr *tokenReader) fill() bool {
+	for tr.pos >= len(tr.tokens) {
+		if !tr.scanner.Scan() {
+			return false
+		}
+		tr.curLine = tr.scanner.Text()
+		tr.tokens = strings.Fields(tr.curLine)
+		tr.pos = 0
+	}
+	return true
+}
+
+// next 读取下一个 token
+func (tr *tokenReader) next() (string, bool) {
+	if !tr.fill() {
+		return "", false
+	}
+	tok := tr.tokens[tr.pos]
+	tr.pos++
+	return tok, true
+}
+
+// peek 读取但不消费下一个 token
+func (tr *tokenReader) peek() (string, bool) {
+	if !tr.fill() {
+		return "", false
+	}
+	return tr.tokens[tr.pos], true
+}
+
+// skipRestOfLine 跳过当前行剩余的 token
+func (tr *tokenReader) skipRestOfLine() {
+	tr.tokens = nil
+	tr.pos = 0
+}
+
+// isDataToken 判断 token 是否为数组初始数据
+func isDataToken(s string) bool {
+	if s == "" {
+		return false
+	}
+	if s == ";" {
+		return true
+	}
+	if s[0] >= '0' && s[0] <= '9' || s[0] == '-' || s[0] == '+' {
+		return true
+	}
+	return false
+}
+
 // Editor 编辑器/汇编器，对应 C++ 的 editor 类
 type Editor struct {
 	ID             int
@@ -16,49 +79,55 @@ type Editor struct {
 	dataBuffer     []int
 }
 
-func newEditor(key, codeSize int) *Editor {
+func newEditor(key, codeSize, dataSize int) *Editor {
 	return &Editor{
 		ID:             key,
 		codeBufferSize: codeSize,
-		codeBuffer:     make([]int, 200),
-		dataBuffer:     make([]int, 100),
+		codeBuffer:     make([]int, codeSize),
+		dataBuffer:     make([]int, dataSize),
 	}
 }
 
 // editorFromFile 从文件汇编，返回代码段长度，-1 表示错误
 // dataNumInMData 返回数据段中数据的个数
 func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInMData *int) int {
-	var o, d, s int // opcode, destination operand, source operand
+	tr := newTokenReader(scanner)
+	var o, d, s int
 	var op, od, os_ string
-	var comment string
-	var opcodeType int   // 0,1,2 operands
-	var addressing int   // addressing way
+	var opcodeType int
+	var addressing int
 	var addressingUnion int
-	i := 0 // 实际行号（代码段位置）
-	j := 0 // 显示行号
+	i := 0
+	j := 0
 	dataCounter := 0
 	state := 0
 
-	var v int    // 变量数
-	var tagv int // 标号数
-	var jmpv int // 跳转数
+	// 清空缓冲区，防止上一次汇编的残留数据串入本次
+	for k := 0; k < len(e.codeBuffer); k++ {
+		e.codeBuffer[k] = 0
+	}
+	for k := 0; k < len(e.dataBuffer); k++ {
+		e.dataBuffer[k] = 0
+	}
 
-	var varTable [20]varNote
-	var tagTable [20]varNote
-	var jumpTable [20]varNote2
+	// 变量表/标号表/跳转表：动态扩容，支持较长程序
+	var varTable []varNote
+	var tagTable []varNote
+	var jumpTable []varNote2
 
-	if displayMode != 0 {
+	if displayMode == 1 {
 		printf("display your statememts\n")
 	}
-	if displayMode != 0 {
+	if displayMode == 1 {
 		printf("%-4d", j)
 	}
 
 	// 读取第一个 token
-	if !scanner.Scan() {
+	var ok bool
+	op, ok = tr.next()
+	if !ok {
 		return -1
 	}
-	op = scanner.Text()
 	o = a.trans(op, j)
 	opcodeType = o % 10
 
@@ -67,36 +136,26 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 	case 0:
 		d = 0
 		s = 0
-		if displayMode != 0 {
+		if displayMode == 1 {
 			fmt.Printf("%s\n", op)
 		}
 	case 1:
 		s = 0
-		if scanner.Scan() {
-			od = scanner.Text()
-		}
-		if displayMode != 0 {
+		od, _ = tr.next()
+		if displayMode == 1 {
 			fmt.Printf("%s %s\n", op, od)
 		}
 	case 2:
-		if o != 910002 { // 非 dim 语句
-			if scanner.Scan() {
-				od = scanner.Text()
-			}
-			if scanner.Scan() {
-				os_ = scanner.Text()
-			}
-			if displayMode != 0 {
+		if o != 910002 {
+			od, _ = tr.next()
+			os_, _ = tr.next()
+			if displayMode == 1 {
 				fmt.Printf("%s %s %s\n", op, od, os_)
 			}
 		} else {
-			if scanner.Scan() {
-				od = scanner.Text()
-			}
-			if scanner.Scan() {
-				os_ = scanner.Text()
-			}
-			if displayMode != 0 {
+			od, _ = tr.next()
+			os_, _ = tr.next()
+			if displayMode == 1 {
 				fmt.Printf("%s %s %s ", op, od, os_)
 			}
 		}
@@ -106,12 +165,12 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 	if o != 910002 && o != 920001 && o != 3 && opcodeType != 0 {
 		if opcodeType == 1 {
 			if o != 900421 && o != 900521 && o != 900621 && o != 900721 && o != 900821 && o != 904121 {
-				d = a.trans2(od, varTable[:], j, &addressing)
+				d = a.trans2(od, varTable, j, &addressing)
 				addressingUnion = addressing
 			}
 		}
 		if opcodeType == 2 {
-			d = a.trans2(od, varTable[:], j, &addressing)
+			d = a.trans2(od, varTable, j, &addressing)
 			if addressing == 3 {
 				RES = 197
 				if systemChecker.showLevel(RES, sysLog[:]) {
@@ -121,7 +180,7 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 				state = 8
 			}
 			addressingUnion = addressing
-			s = a.trans2(os_, varTable[:], j, &addressing)
+			s = a.trans2(os_, varTable, j, &addressing)
 			addressingUnion += addressing * 1000
 		}
 	}
@@ -129,7 +188,7 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 	for o != 900000 && o != -1 && i < e.codeBufferSize {
 		if o == 920001 { // 标号
 			m := 0
-			for tagTable[m].valid != 0 {
+			for m < len(tagTable) && tagTable[m].valid != 0 {
 				if od == tagTable[m].varName {
 					RES = 193
 					if systemChecker.showLevel(RES, sysLog[:]) {
@@ -142,20 +201,14 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 				m++
 			}
 
-			tagTable[tagv].varName = od
-			tagTable[tagv].pos = i
-			tagTable[tagv].valid = 1
-			tagv++
+			tagTable = append(tagTable, varNote{valid: 1, varName: od, pos: i})
 
 		} else if o == 900421 || o == 900521 || o == 900621 || o == 900721 || o == 900821 || o == 904121 {
 			// 跳转和 call
-			jumpTable[jmpv].varName = od
-			jumpTable[jmpv].pos = i
-			jumpTable[jmpv].valid = 1
-			jmpv++
+			jumpTable = append(jumpTable, varNote2{valid: 1, varName: od, pos: i})
 
 			e.codeBuffer[i] = o
-			e.codeBuffer[i+1] = 3 // 立即数寻址
+			e.codeBuffer[i+1] = 3
 			e.codeBuffer[i+3] = 0
 			i += 4
 			j++
@@ -163,7 +216,7 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 		} else if o == 910002 { // DIM/LOC 声明变量
 			if (od[0] >= 'a' && od[0] <= 'z') || (od[0] >= 'A' && od[0] <= 'Z') {
 				t := 0
-				for varTable[t].valid != 0 {
+				for t < len(varTable) && varTable[t].valid != 0 {
 					if od == varTable[t].varName {
 						RES = 196
 						if systemChecker.showLevel(RES, sysLog[:]) {
@@ -176,67 +229,67 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 					t++
 				}
 
-				varTable[v].varName = od
-				varTable[v].pos = dataCounter
-				varTable[v].valid = 1
-				v++
+				varTable = append(varTable, varNote{valid: 1, varName: od, pos: dataCounter})
 
 				if len(os_) > 0 && os_[0] == 'D' { // 数组声明
 					arrLen, _ := strconv.Atoi(os_[1:])
 					dataNum := dataCounter
 					dataCounter += arrLen
 
-					// C++ 用 fgetc 逐字符读取直到 ';'
-					// ScanWords 模式下，读取 token 直到遇到含 ';' 的
-					var dataTokens []string
-					for scanner.Scan() {
-						token := scanner.Text()
-						dataTokens = append(dataTokens, token)
-						if strings.HasSuffix(token, ";") || token == ";" {
-							break
-						}
-					}
-
-					// 将所有 token 拼接，按逗号分隔解析
-					joined := strings.Join(dataTokens, " ")
-					// 去掉分号
-					joined = strings.TrimSuffix(joined, ";")
-					if strings.HasSuffix(joined, ";") {
-						joined = joined[:len(joined)-1]
-					}
-					fmt.Printf("%s;\n", joined)
-
-					// 按逗号分割
-					parts := strings.Split(joined, ",")
-					for _, part := range parts {
-						part = strings.TrimSpace(part)
-						if part == "" {
-							continue
-						}
-						// 去掉可能残留的分号
-						part = strings.TrimSuffix(part, ";")
-						if part == "" {
-							continue
-						}
-						if (part[0] >= '0' && part[0] <= '9') || part[0] == '-' || part[0] == '+' {
-							if dataNum+1 > dataCounter {
-								fmt.Println()
-								RES = 191
-								if systemChecker.showLevel(RES, sysLog[:]) {
-									printf("D%-5d ", e.ID)
-									systemChecker.check(RES, sysLog[:])
-								}
-								state = 3
+					// 先 peek 下一个 token，判断是否有数组初始值
+					nextTok, hasNext := tr.peek()
+					if hasNext && isDataToken(nextTok) {
+						// 有初始值，读取直到 ';'
+						var dataTokens []string
+						for {
+							tok, ok := tr.next()
+							if !ok {
 								break
 							}
-							k, _ := strconv.Atoi(part)
-							e.dataBuffer[dataNum] = k
-							dataNum++
+							// ';' 之后的部分（如 ';~ 注释'）属于注释，截断并丢弃同行剩余内容
+							if idx := strings.Index(tok, ";"); idx >= 0 {
+								tok = tok[:idx+1]
+								dataTokens = append(dataTokens, tok)
+								tr.skipRestOfLine()
+								break
+							}
+							dataTokens = append(dataTokens, tok)
+						}
+
+						joined := strings.Join(dataTokens, " ")
+						joined = strings.TrimSuffix(joined, ";")
+						if strings.HasSuffix(joined, ";") {
+							joined = joined[:len(joined)-1]
+						}
+
+						parts := strings.Split(joined, ",")
+						for _, part := range parts {
+							part = strings.TrimSpace(part)
+							if part == "" {
+								continue
+							}
+							part = strings.TrimSuffix(part, ";")
+							if part == "" {
+								continue
+							}
+							if (part[0] >= '0' && part[0] <= '9') || part[0] == '-' || part[0] == '+' {
+								if dataNum+1 > dataCounter {
+									RES = 191
+									if systemChecker.showLevel(RES, sysLog[:]) {
+										printf("D%-5d ", e.ID)
+										systemChecker.check(RES, sysLog[:])
+									}
+									state = 3
+									break
+								}
+								k, _ := strconv.Atoi(part)
+								e.dataBuffer[dataNum] = k
+								dataNum++
+							}
 						}
 					}
 				} else {
 					// 单个变量赋值
-					fmt.Println()
 					if len(os_) > 0 && ((os_[0] >= '0' && os_[0] <= '9') || os_[0] == '-' || os_[0] == '+') {
 						k, _ := strconv.Atoi(os_)
 						e.dataBuffer[dataCounter] = k
@@ -250,7 +303,6 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 						state = 4
 					}
 				}
-
 			} else {
 				RES = 13
 				if systemChecker.showLevel(RES, sysLog[:]) {
@@ -262,11 +314,9 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 		} else {
 			// 普通指令
 			if o == 3 { // 注释
-				if scanner.Scan() {
-					comment = scanner.Text()
-				}
-				if displayMode != 0 {
-					fmt.Printf("%s %s\n", op, comment)
+				tr.skipRestOfLine()
+				if displayMode == 1 {
+					fmt.Printf("%s\n", tr.curLine)
 				}
 			} else {
 				if o == 800000 {
@@ -285,15 +335,15 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 			}
 		}
 
-		if displayMode != 0 {
+		if displayMode == 1 {
 			printf("%-4d", j)
 		}
 
 		// 读取下一条指令
-		if !scanner.Scan() {
+		op, ok = tr.next()
+		if !ok {
 			break
 		}
-		op = scanner.Text()
 		o = a.trans(op, j)
 		opcodeType = o % 10
 
@@ -303,36 +353,26 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 		case 0:
 			d = 0
 			s = 0
-			if displayMode != 0 {
+			if displayMode == 1 {
 				fmt.Printf("%s\n", op)
 			}
 		case 1:
 			s = 0
-			if scanner.Scan() {
-				od = scanner.Text()
-			}
-			if displayMode != 0 {
+			od, _ = tr.next()
+			if displayMode == 1 {
 				fmt.Printf("%s %s\n", op, od)
 			}
 		case 2:
 			if o != 910002 {
-				if scanner.Scan() {
-					od = scanner.Text()
-				}
-				if scanner.Scan() {
-					os_ = scanner.Text()
-				}
-				if displayMode != 0 {
+				od, _ = tr.next()
+				os_, _ = tr.next()
+				if displayMode == 1 {
 					fmt.Printf("%s %s %s\n", op, od, os_)
 				}
 			} else {
-				if scanner.Scan() {
-					od = scanner.Text()
-				}
-				if scanner.Scan() {
-					os_ = scanner.Text()
-				}
-				if displayMode != 0 {
+				od, _ = tr.next()
+				os_, _ = tr.next()
+				if displayMode == 1 {
 					fmt.Printf("%s %s %s ", op, od, os_)
 				}
 			}
@@ -341,12 +381,12 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 		if o != 910002 && o != 920001 && o != 3 && opcodeType != 0 {
 			if opcodeType == 1 {
 				if o != 900421 && o != 900521 && o != 900621 && o != 900721 && o != 900821 && o != 904121 {
-					d = a.trans2(od, varTable[:], j, &addressing)
+					d = a.trans2(od, varTable, j, &addressing)
 					addressingUnion = addressing
 				}
 			}
 			if opcodeType == 2 {
-				d = a.trans2(od, varTable[:], j, &addressing)
+				d = a.trans2(od, varTable, j, &addressing)
 				if addressing == 3 {
 					RES = 197
 					if systemChecker.showLevel(RES, sysLog[:]) {
@@ -363,11 +403,10 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 	}
 
 	if o == 900000 && state == 0 {
-		// 正常结束，修正跳转表
 		m := 0
-		for tagTable[m].valid != 0 {
+		for m < len(tagTable) && tagTable[m].valid != 0 {
 			n := 0
-			for jumpTable[n].valid != 0 {
+			for n < len(jumpTable) && jumpTable[n].valid != 0 {
 				if jumpTable[n].found == 0 {
 					if jumpTable[n].varName == tagTable[m].varName {
 						e.codeBuffer[jumpTable[n].pos+2] = tagTable[m].pos
@@ -380,7 +419,7 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 		}
 
 		m = 0
-		for jumpTable[m].valid != 0 {
+		for m < len(jumpTable) && jumpTable[m].valid != 0 {
 			if jumpTable[m].found == 0 {
 				RES = 194
 				if systemChecker.showLevel(RES, sysLog[:]) {
@@ -393,7 +432,7 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 			m++
 		}
 
-		if displayMode != 0 {
+		if displayMode == 1 {
 			fmt.Println("end edit")
 		}
 		e.codeBuffer[i] = o
@@ -423,7 +462,7 @@ func (e *Editor) ASM(f *os.File, a *Assembler, s string) int {
 	var dataInMData int
 	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
-	scanner.Split(bufio.ScanWords)
+	scanner.Split(bufio.ScanLines)
 
 	r := e.editorFromFile(scanner, a, &dataInMData)
 	if r == -1 {
@@ -432,80 +471,69 @@ func (e *Editor) ASM(f *os.File, a *Assembler, s string) int {
 
 	// 生成 .co 文件
 	tmps := s
-	// 找到最后一个 '.' 替换扩展名
 	dotIdx := strings.LastIndex(tmps, ".")
 	if dotIdx >= 0 {
 		tmps = tmps[:dotIdx]
 	}
 	tmps += ".co"
 
-	fsave, err := os.Create(tmps)
+	coFile, err := os.Create(tmps)
 	if err != nil {
-		RES = 195
-		if systemChecker.showLevel(RES, sysLog[:]) {
-			printf("D%-5d ", e.ID)
-			systemChecker.check(RES, sysLog[:])
-		}
 		return -1
 	}
-	defer fsave.Close()
+	defer coFile.Close()
 
-	for i := 0; i < r; i++ {
-		fmt.Fprintf(fsave, "%d ", e.codeBuffer[i])
+	for k := 0; k < r; k++ {
+		fmt.Fprintf(coFile, "%d ", e.codeBuffer[k])
 	}
-
-	fmt.Fprintf(fsave, "%d ", dataInMData)
-
-	for i := 0; i < dataInMData; i++ {
-		fmt.Fprintf(fsave, "%d ", e.dataBuffer[i])
+	fmt.Fprintf(coFile, "\n%d\n", dataInMData)
+	for k := 0; k < dataInMData; k++ {
+		fmt.Fprintf(coFile, "%d ", e.dataBuffer[k])
 	}
+	fmt.Fprintf(coFile, "\n")
 
-	return 0
+	return r
 }
 
-// Load 从 .co 文件加载代码和数据到进程
-func Load(pptr *Process, s string) int {
-	dotIdx := strings.LastIndex(s, ".")
-	tmps := s
+// Load 从 .co 文件加载到进程的代码段和数据段
+func Load(p *Process, name string) {
+	// 打开 .co 文件
+	coName := name
+	dotIdx := strings.LastIndex(coName, ".")
 	if dotIdx >= 0 {
-		tmps = s[:dotIdx]
+		coName = coName[:dotIdx]
 	}
-	tmps += ".co"
+	coName += ".co"
 
-	fo, err := os.Open(tmps)
+	f, err := os.Open(coName)
 	if err != nil {
-		return -1
+		return
 	}
-	defer fo.Close()
+	defer f.Close()
 
-	scanner := bufio.NewScanner(fo)
+	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
-	scanner.Split(bufio.ScanWords)
 
-	i := 0
-	for scanner.Scan() {
-		cw, _ := strconv.Atoi(scanner.Text())
-		if cw == 900000 {
-			pptr.MCode.write(i, cw)
-			i++
-			break
-		}
-		pptr.MCode.write(i, cw)
-		i++
-	}
-
-	// 读取数据段长度
 	if !scanner.Scan() {
-		return 0
+		return
 	}
-	length, _ := strconv.Atoi(scanner.Text())
-
-	for i := 0; i < length; i++ {
-		if scanner.Scan() {
-			cw, _ := strconv.Atoi(scanner.Text())
-			pptr.MData.write(i, cw)
+	parts := strings.Fields(scanner.Text())
+	for k, part := range parts {
+		if k < len(p.MCode.mem) {
+			p.MCode.mem[k], _ = strconv.Atoi(part)
 		}
 	}
 
-	return 0
+	if scanner.Scan() {
+		dataCount, _ := strconv.Atoi(scanner.Text())
+		if scanner.Scan() {
+			dparts := strings.Fields(scanner.Text())
+			for k, dp := range dparts {
+				if k < len(p.MData.mem) {
+					p.MData.mem[k], _ = strconv.Atoi(dp)
+				}
+			}
+		}
+		_ = dataCount
+	}
 }

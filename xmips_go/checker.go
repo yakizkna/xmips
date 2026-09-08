@@ -18,6 +18,10 @@ func (c *Checker) showLevel(k int, abendTable []abendNote) bool {
 		i++
 	}
 	rl := abendTable[i].level
+	if displayMode == 2 {
+		// displayMode=2：只显示错误信息，其余全部屏蔽
+		return rl == 3
+	}
 	if reportLevel == 0 && rl != 2 && rl != 3 {
 		return false
 	}

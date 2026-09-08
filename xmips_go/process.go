@@ -21,7 +21,7 @@ func newProcess(pid, csz, dsz, ssz, prty int) *Process {
 		ID:          pid,
 		priority:    prty,
 		state:       0,
-		exetime:      0,
+		exetime:     0,
 		callerID:    0,
 		communicate: 0,
 		update:      0,
@@ -184,7 +184,7 @@ func (l *PCBList) deQueue(pblock **PCB) int {
 	if l.len == 0 {
 		RES = 130
 		if systemChecker.showLevel(RES, sysLog[:]) {
-			printf("D%-5d pcb's process ID:%d ", l.ID, (*pblock).ID)
+			printf("D%-5d pcb list:%d ", l.ID, l.ID)
 			systemChecker.check(RES, sysLog[:])
 		}
 		return -1
@@ -215,7 +215,9 @@ func (l *PCBList) IDGet(pblock **PCB, id int) int {
 		current = current.next
 	}
 	if current == nil {
-		printf("not find pcb!\n")
+		if displayMode != 2 {
+			printf("not find pcb!\n")
+		}
 		return -1
 	}
 	*pblock = current

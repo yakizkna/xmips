@@ -92,21 +92,22 @@ var sysLog = [100]abendNote{
 	{195, 3, "editor::ASM: open file failed"},
 	{196, 3, "editor::editorFromFile: indentifier repeated"},
 	{197, 3, "editor::editorFromFile: immediate num cant be 1st operand in double operands instruction"},
+	{198, 3, "interpreter::exer: illegal access to input register #14 (only INT 14 can read it)"},
 }
 
-var sysFunNumber = 1 // 当前使用的系统函数数量（测试用1）
+var sysFunNumber = 5 // 系统函数数量（索引 0-4 → INT 10-14）
 
 var sysFunTable = [10]string{
-	"bubble.scp",
-	"sum.scp",
-	"read.scp",
-	"write.scp",
-	"suspend.scp",
-	"wakeup.scp",
-	"P.scp",
-	"V.scp",
-	"semaphore.scp",
-	"pause.scp",
+	"INT_10.scp", // index 0 → INT 10: 冒泡排序
+	"",           // index 1 → INT 11: (保留)
+	"",           // index 2 → INT 12: (保留)
+	"INT_13.scp", // index 3 → INT 13: 输出
+	"INT_14.scp", // index 4 → INT 14: 输入
+	"",
+	"",
+	"",
+	"",
+	"",
 }
 
 var sysPath = [2]string{
@@ -123,6 +124,16 @@ var reportLevel = 0 // 0 report Error, 1 report Normal and Error, 2 report all
 var delayMode = 0 // 0 不延时, 1 延时
 
 var updateSysfun = 1 // 0 不重新汇编系统函数, 1 重新汇编
+
+// config.ini 可配置的系统参数（默认值与代码原硬编码一致）
+var codeSize = 800       // 用户进程代码区长度（字）
+var dataSize = 200       // 用户进程数据区长度（字）
+var stackSize = 50       // 用户进程栈区长度（字）
+var sysfunCodeSize = 800 // 系统函数代码区长度（字）
+var sysfunDataSize = 10  // 系统函数数据区长度（字，运行时指向调用者数据段）
+var sysfunStackSize = 40 // 系统函数栈区长度（字）
+var cycleTimes = 30      // 时间片大小：每个时间片最多执行的指令数
+var pcbNum = 40          // PCB 数量：系统最大并发进程数
 
 // procDelay 在 interpreter 的 load/store/push/pop 等操作中使用
 func procDelay(mode int, timeMs int) {

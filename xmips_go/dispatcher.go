@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 )
 
@@ -10,27 +9,27 @@ var stdinReader = bufio.NewReader(os.Stdin)
 
 // Dispatcher 调度器，对应 C++ 的 dispatcher 类
 type Dispatcher struct {
-	ID              int
-	pcbNum          int
-	pcbSet          []PCB
-	usedPcbNumber   int
-	sysTem          *Process // 当前运行的系统函数
-	runb            *PCB     // 当前运行的进程 PCB
-	readyb          *PCBList // 就绪队列
-	waitb           [20]*PCBList // 等待队列
-	systemShare     [200]int // 系统共享区
+	ID                   int
+	pcbNum               int
+	pcbSet               []PCB
+	usedPcbNumber        int
+	sysTem               *Process     // 当前运行的系统函数
+	runb                 *PCB         // 当前运行的进程 PCB
+	readyb               *PCBList     // 就绪队列
+	waitb                [20]*PCBList // 等待队列
+	systemShare          [200]int     // 系统共享区
 	priorityCounterTable [3]int
 
-	Finished *Queue // 完成队列
+	Finished *Queue   // 完成队列
 	SysCall  *SysList // 系统函数列表
 }
 
 func newDispatcher(key, sysFunLen, finishLen, pcbs int) *Dispatcher {
 	d := &Dispatcher{
-		ID:    key,
-		pcbNum: pcbs,
-		pcbSet: make([]PCB, pcbs),
-		readyb: newPCBList(key * 10),
+		ID:       key,
+		pcbNum:   pcbs,
+		pcbSet:   make([]PCB, pcbs),
+		readyb:   newPCBList(key * 10),
 		Finished: newQueue(key*10+3, finishLen),
 		SysCall:  newSysList(key*10+2, sysFunLen),
 	}
@@ -154,9 +153,16 @@ func (d *Dispatcher) swap2(im *Interpreter) int {
 				systemChecker.check(RES, sysLog[:])
 			}
 
-			if mode == 0 || mode == 2 {
+			if mode != 1 { // 0=正常返回, 2=挂起返回；唤醒调用者
+				outPauseb = nil
 				d.waitb[d.runb.ID].deQueue(&outPauseb)
 				if outPauseb != nil && outPauseb.ID == d.runb.callerID {
+					// INT 14 返回：把缓冲区满/EOF 标志（系统函数 #13）写回调用者 #13 槽
+					// 栈布局（INT 时压入）: GM[0..14], PC, flag，sp-4 对应 #13
+					if d.runb.ID == inputReg-10 {
+						sp := outPauseb.pptr.S.SP
+						outPauseb.pptr.S.write(sp-4, im.GM.read(13))
+					}
 					if mode == 0 {
 						d.readyb.insertToHead(outPauseb)
 						RES = 188
@@ -167,12 +173,14 @@ func (d *Dispatcher) swap2(im *Interpreter) int {
 					} else { // mode == 2
 						d.readyb.enQueue(outPauseb)
 						outPauseb.state = 0
-						printf("D%-5d process ID:%d, pause cause:%d ", d.ID, outPauseb.ID, d.runb.ID)
 						RES = 175
-						systemChecker.check(RES, sysLog[:])
+						if systemChecker.showLevel(RES, sysLog[:]) {
+							printf("D%-5d process ID:%d, pause cause:%d ", d.ID, outPauseb.ID, d.runb.ID)
+							systemChecker.check(RES, sysLog[:])
+						}
 					}
 				}
-			} else if mode == 1 { // suspend caller
+			} else { // mode == 1: suspend caller
 				RES = 185
 				if systemChecker.showLevel(RES, sysLog[:]) {
 					printf("D%-5d process ID:%d, suspended process ID:%d ", d.ID, d.runb.ID, d.runb.pptr.callerID)
@@ -273,34 +281,6 @@ func (d *Dispatcher) swap2(im *Interpreter) int {
 					printf("D%-5d process ID:%d ", d.ID, d.runb.ID)
 					systemChecker.check(RES, sysLog[:])
 				}
-			}
-			r = 1
-
-		case 13: // INT 13 — 输出：读 #13，输出字符到 stdout
-			sp := d.runb.pptr.S.SP
-			ch := d.runb.pptr.S.read(sp - 4)
-			fmt.Printf("%c", ch)
-			d.readyb.insertToHead(d.runb)
-			RES = 188
-			if systemChecker.showLevel(RES, sysLog[:]) {
-				printf("D%-5d process ID:%d, INT 13 output", d.ID, d.runb.ID)
-				systemChecker.check(RES, sysLog[:])
-			}
-			r = 1
-
-		case 14: // INT 14 — 输入：从 stdin 读字符到 #14，EOF 返回 0
-			sp := d.runb.pptr.S.SP
-			b, err := stdinReader.ReadByte()
-			if err != nil {
-				d.runb.pptr.S.write(sp-3, 0)
-			} else {
-				d.runb.pptr.S.write(sp-3, int(b))
-			}
-			d.readyb.insertToHead(d.runb)
-			RES = 188
-			if systemChecker.showLevel(RES, sysLog[:]) {
-				printf("D%-5d process ID:%d, INT 14 input", d.ID, d.runb.ID)
-				systemChecker.check(RES, sysLog[:])
 			}
 			r = 1
 

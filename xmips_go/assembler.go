@@ -13,6 +13,10 @@ func newAssembler(key int) *Assembler {
 
 // trans 将助记符翻译为数字操作码
 func (a *Assembler) trans(op string, line int) int {
+	// 注释：任何以 '~' 开头的 token 都视为注释（允许 ~ 后直接跟内容）
+	if len(op) > 0 && op[0] == '~' {
+		return 3
+	}
 	switch op {
 	case "MOV", "mov":
 		return 900152
@@ -88,8 +92,6 @@ func (a *Assembler) trans(op string, line int) int {
 		return 960100
 	case "HALT", "halt":
 		return 800000
-	case "~":
-		return 3 // 注释
 	case "CMNT", "cmnt":
 		return 3
 	case "$":
