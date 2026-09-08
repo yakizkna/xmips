@@ -1,6 +1,6 @@
 # Go 复刻版可执行文件（根目录产物与 build.sh 拷贝到运行目录的产物）
-xmips_go/xmips_go
-xmips_go/Xmips/xmips_go
+xmips_go/xmips
+xmips_go/Xmips/xmips
 
 # 运行生成的字符码文件（.co）
 xmips_go/Xmips/*.co

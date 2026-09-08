@@ -101,6 +101,15 @@ func atoiSafe(s string) int {
 	return n
 }
 
+// osOpen 直接按完整路径打开文件（用于命令行指定的任意路径程序）
+func osOpen(path string) (*os.File, int) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, -1
+	}
+	return f, 0
+}
+
 func main() {
 	if config() != 0 {
 		fmt.Println("system parameters config error!")
@@ -148,47 +157,84 @@ func main() {
 
 	//************************************************************************************************************
 	// 加载用户程序
+	// 支持两种方式：
+	//   1) ./xmips            -> 从 run.list 读取要运行的程序
+	//   2) ./xmips prog.cupa  -> 直接用命令行参数指定程序，忽略 run.list
 	{
-		run, ret := disk.getFile(runList, 0)
-		if ret != 0 {
-			fmt.Println("cannot open run.list")
-			return
-		}
-
-		scanner := bufio.NewScanner(run)
-		scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
-		scanner.Split(bufio.ScanWords)
-
-		// 读取第一个程序名
-		if !scanner.Scan() {
-			return
-		}
-		name := scanner.Text()
-
-		id := 50 // 用户进程起始 ID
-		for name != "end" && name != "END" {
+		// 从 file 目录加载用户程序（run.list 场景）
+		loadFromDisk := func(name string, id int) int {
 			pfr, ret2 := disk.getFile(name, 0)
-			if ret2 == 0 {
-				pptr := newProcess(0, codeSize, dataSize, stackSize, 1)
-				pptr.ID = id
-				if displayMode != 2 {
-					fmt.Printf("process ID:%d\n", pptr.ID)
-				}
-
-				if e.ASM(pfr, a, name) != -1 {
-					Load(pptr, name)
-					os_.loader(pptr)
-				}
-				disk.releaseFile(pfr)
+			if ret2 != 0 {
+				fmt.Printf("cannot open %s\n", name)
+				return ret2
 			}
-			id++
-
-			if !scanner.Scan() {
-				break
+			defer disk.releaseFile(pfr)
+			pptr := newProcess(0, codeSize, dataSize, stackSize, 1)
+			pptr.ID = id
+			if displayMode != 2 {
+				fmt.Printf("process ID:%d\n", pptr.ID)
 			}
-			name = scanner.Text()
+			if e.ASM(pfr, a, name) != -1 {
+				Load(pptr, name)
+				os_.loader(pptr)
+			}
+			return 0
 		}
-		run.Close()
+
+		if len(os.Args) >= 2 { // 命令行指定程序（可直接传 file 目录内文件名或任意路径）
+			prog := os.Args[1]
+			// 若参数带路径分隔符或文件不存在于 file 目录，则当作直接路径打开
+			var pfr *os.File
+			var ret int
+			if strings.ContainsAny(prog, `/\`) {
+				pfr, ret = osOpen(prog)
+			} else {
+				pfr, ret = disk.getFile(prog, 0)
+			}
+			if ret != 0 {
+				fmt.Printf("cannot open %s\n", prog)
+				return
+			}
+			pptr := newProcess(0, codeSize, dataSize, stackSize, 1)
+			pptr.ID = 50
+			if displayMode != 2 {
+				fmt.Printf("process ID:%d\n", pptr.ID)
+			}
+			if e.ASM(pfr, a, prog) != -1 {
+				Load(pptr, prog)
+				os_.loader(pptr)
+			}
+			pfr.Close()
+		} else { // 从 run.list 读取
+			run, ret := disk.getFile(runList, 0)
+			if ret != 0 {
+				fmt.Println("cannot open run.list")
+				return
+			}
+
+			scanner := bufio.NewScanner(run)
+			scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
+			scanner.Split(bufio.ScanWords)
+
+			// 读取第一个程序名
+			if !scanner.Scan() {
+				run.Close()
+				return
+			}
+			name := scanner.Text()
+
+			id := 50 // 用户进程起始 ID
+			for name != "end" && name != "END" {
+				loadFromDisk(name, id)
+				id++
+
+				if !scanner.Scan() {
+					break
+				}
+				name = scanner.Text()
+			}
+			run.Close()
+		}
 	}
 	//*************************************************************************************************************
 
