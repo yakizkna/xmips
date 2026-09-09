@@ -52,7 +52,8 @@ sudo chmod -R u+rwX "$X_HM"
 echo "  $X_HM/config.ini:"; sudo grep -E '^(fileEnable|sockEnable)=' "$X_HM/config.ini"
 
 echo "[5/7] 重建受限账号系统函数库"
-sudo -u "$XUSER" env HOME="$X_HM" "$BIN" update
+# 不要覆盖 HOME：sudo -u 会使用 xmipsuser 真实家目录(/home/xmipsuser)，xmips 据此定位 ~/.xmips
+sudo -u "$XUSER" "$BIN" update
 
 echo "[6/7] sudoers：yaki 免密以 $XUSER 执行 $BIN"
 SUDO_FILE="/etc/sudoers.d/xmips-plus"
@@ -69,10 +70,14 @@ UNIT_D="/etc/systemd/system/yakisite.service.d"
 sudo mkdir -p "$UNIT_D"
 UNIT_F="$(sudo ls "$UNIT_D"/*.conf 2>/dev/null | head -1)"
 [ -n "$UNIT_F" ] || UNIT_F="$UNIT_D/override.conf"
-sudo bash -c "grep -qx '\[Service\]' '$UNIT_F' || printf '[Service]\n' | cat - '$UNIT_F' > '$UNIT_F.tmp' && mv '$UNIT_F.tmp' '$UNIT_F'"
-sudo bash -c "grep -qx 'Environment=XMIPS_PUBLIC_USER=$XUSER' '$UNIT_F' || printf 'Environment=XMIPS_PUBLIC_USER=$XUSER\n' >> '$UNIT_F'"
+# 确保 [Service] 段头存在
+if ! sudo grep -qx '\[Service\]' "$UNIT_F" 2>/dev/null; then
+    sudo bash -c "{ echo '[Service]'; :; } > '$UNIT_F.tmp' && cat '$UNIT_F' >> '$UNIT_F.tmp' && mv '$UNIT_F.tmp' '$UNIT_F'"
+fi
+# 注入环境变量（幂等）
+sudo bash -c "grep -qx 'Environment=XMIPS_PUBLIC_USER=$XUSER' '$UNIT_F' || echo 'Environment=XMIPS_PUBLIC_USER=$XUSER' >> '$UNIT_F'"
 echo "  $UNIT_F:"; sudo grep -E '^\[' "$UNIT_F"; sudo grep '^Environment=' "$UNIT_F" || true
 
 echo "[8/7] 验证"
-sudo -u "$XUSER" env HOME="$X_HM" "$BIN" 2>&1 | head -n 3 || true
+sudo -u "$XUSER" "$BIN" 2>&1 | head -n 3 || true
 echo "完成。xmips=$BIN  xmipsuser=$X_HM"
