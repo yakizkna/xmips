@@ -76,20 +76,17 @@ func config() int {
 			if r == 32 || r == 64 {
 				wordBits = r
 			}
-		case "diskRoot":
-			// 字符串值需剥离行内注释与两端空白
-			v := strings.SplitN(val, ";", 2)[0]
-			v = strings.TrimSpace(v)
-			if v != "" {
-				diskRoot = v
-			}
-		case "diskOnly":
+		case "fileEnable":
 			if r == 0 || r == 1 {
-				diskOnly = r
+				fileEnable = r
 			}
 		case "sockTimeout":
 			if r > 0 {
 				sockTimeout = r
+			}
+		case "sockEnable":
+			if r == 0 || r == 1 {
+				sockEnable = r
 			}
 		case "dump":
 			dumpEnabled = r

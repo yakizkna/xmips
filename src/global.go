@@ -148,13 +148,13 @@ var pcbNum = 10        // PCB 数量：系统最大并发进程数
 // wordBits 机器字长（位）：32 或 64。决定通用寄存器与内存中整数的有效位数与进位行为
 var wordBits = 32
 
-// diskRoot 磁盘沙箱根目录名（相对 cwd）。仅当 diskOnly=1 时生效：
-// 用户文件 open 被限制在该目录内，禁止绝对路径与 .. 越出。
-var diskRoot = "disk"
+// fileEnable 置 0 时禁用一切文件打开(open/read/write)。面向公网/不可信用户部署时关闭,
+// 否则 cupa 可用绝对路径读写任意宿主文件(读密钥/改配置等)。
+var fileEnable = 1
 
-// diskOnly 置 1 时启用磁盘沙箱：用户文件只允许读写 <cwd>/diskRoot 目录内。
-// 面向公网/不可信用户部署时必须开启，否则 cupa 可用绝对路径读写任意宿主文件。
-var diskOnly = 0
+// sockEnable 置 0 时禁用一切 socket 打开(sock:/tlssock:)。面向公网/不可信用户部署时必须关闭,
+// 否则 cupa 可自由连任意 host:port, 构成 SSRF(如云元数据 169.254.169.254) 并可探测内网服务。
+var sockEnable = 1
 
 // sockTimeout socket connect/write 超时（毫秒）
 var sockTimeout = 2000
