@@ -18,10 +18,10 @@ case "$cmd" in
     (cd src && go build -o "$TMPBIN" .)
 
     echo "==> 2) 安装到 $BIN ..."
-    if ! cp "$TMPBIN" "$BIN" 2>/dev/null; then
-      echo "    无写权限，尝试 sudo ..." && sudo cp "$TMPBIN" "$BIN"
+    # install 一条命令完成复制+设置权限；无写权限时整体走 sudo
+    if ! install -m 0755 "$TMPBIN" "$BIN" 2>/dev/null; then
+      echo "    无写权限，尝试 sudo ..." && sudo install -m 0755 "$TMPBIN" "$BIN"
     fi
-    chmod +x "$BIN"
     rm -f "$TMPBIN" dist/xmips   # 不再把二进制留在 dist（顺带清掉旧的 dev 残留）
 
     echo "==> 3) 同步运行目录：dist/* -> $HOME_DIR/ ..."
