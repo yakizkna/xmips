@@ -1,6 +1,6 @@
 # Xmips 文件与网络 Socket 功能规格
 
-> 目标：为 xmips_go 增加**文件 I/O**（真实主机目录映射）与**真实网络客户端 Socket**（TCP 客户端，client-only，无 bind/listen）。
+> 目标：为 xmips 增加**文件 I/O**（真实主机目录映射）与**真实网络客户端 Socket**（TCP 客户端，client-only，无 bind/listen）。
 > 定稿方向：**四个系统调用全部用 INT（15~18），由 dispatcher 原生执行**（不写 `.scp`、无通道寄存器），**网络走真实 TCP，可选 TLS，阻塞/非阻塞由单进程模式决定，均有超时保护**。
 > 状态：已实现并验证（HTML 抓取、文件读写、防死锁均通过）。
 
@@ -148,7 +148,7 @@ config.ini 新增：
 
 | 参数 | 值 | 说明 |
 |------|---|------|
-| diskRoot | `disk` | 虚拟磁盘目录（相对运行目录），自动创建 `Xmips/disk/` |
+| diskRoot | `disk` | 虚拟磁盘目录（相对运行目录），自动创建 `dist/disk/` |
 | sockTimeout | `2000` | socket connect/握手/读写超时（毫秒） |
 
 `open` 的文件路径强制限定 `diskRoot` 内：`filepath.Clean` + 拒绝绝对路径/`..` 越界（§7 错误 -1）。
@@ -179,7 +179,7 @@ config.ini 新增：
 | `src/dispatcher.go` | `swap2` 增加 `case 15/16/17/18`；`#9` 栈槽写回；`fdNoData` 多进程放队尾让出时间片 |
 | `src/main.go` | 解析 `diskRoot/sockTimeout`；计算 `singleProc` 并注入 fsdev、全局常量 |
 | `src/global.go` | 全局 `diskRoot/sockTimeout/singleProc` |
-| `Xmips/config.ini` | 新增 §6 配置项 |
+| `dist/config.ini` | 新增 §6 配置项 |
 | `README.md` / `使用说明.txt` | 补系统调用表（15~18）、TLS、虚拟磁盘、阻塞/超时/让出说明 |
 
 `assembler.go`、`interpreter.go` **无需改动上的新增 opcode/系统函数需求**；`sysfun/INT_xx.scp` **仅 `INT_10.scp`**（冒泡排序）保留，`INT_13.scp`/`INT_14.scp` 已删除（改由 dispatcher 原生执行）。

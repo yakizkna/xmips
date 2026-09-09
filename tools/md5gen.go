@@ -1,5 +1,5 @@
 // md5gen 为 Xmips(Go 版) 生成 MD5.cupa（ABC 汇编）
-// 用法: cd xmips_go/tools && GO111MODULE=off go run md5gen.go
+// 用法: cd tools && GO111MODULE=off go run md5gen.go
 // 说明: bitMode 需设为 32；输入消息 ≤448 字节；输出 32 位小写十六进制 MD5
 package main
 

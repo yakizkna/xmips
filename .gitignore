@@ -1,10 +1,10 @@
 # Go 复刻版可执行文件（build.sh 拷贝到运行目录的产物）
-# 注意：仅忽略 Xmips/xmips；不可写成顶层 "xmips"（macOS ignorecase 下会误忽略整个 Xmips/ 目录）。
-Xmips/xmips
+# 注意：仅忽略 dist/xmips；不可写成顶层 "xmips"（macOS ignorecase 下会误忽略整个 dist/ 目录）。
+dist/xmips
 
 # 运行生成的字符码文件（.co）
-Xmips/*.co
-Xmips/file/*.co
+dist/*.co
+dist/file/*.co
 
 # 运行生成的日志目录（dump.log 等）
-Xmips/log/
+dist/log/

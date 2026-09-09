@@ -1,3 +1,3 @@
-module xmips_go
+module xmips
 
 go 1.21

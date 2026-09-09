@@ -340,13 +340,13 @@ Xmips 通过 `CALL`/`RET` 支持子程序调用（无栈帧、无局部变量，
 - 汇编器在第一个 `END` 终止，故**全文件只能有一个 `END`**（放末尾），主程序结束改用 `HALT`（等效正常结束、不终止汇编）；
 - 标签须以 `: name` 前缀定义；`CALL` 可前向引用其后定义的标签。
 
-完整示例见 [`file/BUBBLE_CALL.cupa`](xmips_go/Xmips/file/BUBBLE_CALL.cupa)：用两个用户子程序完成冒泡排序并输出——
+完整示例见 [`file/BUBBLE_CALL.cupa`](dist/file/BUBBLE_CALL.cupa)：用两个用户子程序完成冒泡排序并输出——
 
 ```text
 51 40 22 17 16 13 5 4 3 2
 ```
 
-与上面 `BUBBLE_INT.cupa`（10 号系统调用）结果一致。更详细的约束见 [`xmips_go/USAGE.md`](xmips_go/USAGE.md) 的 5.1/5.2。
+与上面 `BUBBLE_INT.cupa`（10 号系统调用）结果一致。更详细的约束见 [`USAGE.md`](USAGE.md) 的 5.1/5.2。
 
 ### 系统调用一览
 
@@ -513,22 +513,20 @@ SUM 的字符码文件：
 
 ```
 xmips/
-├── xmips_go/                    # Go 复刻版（当前推荐使用）
-│   ├── src/                     # Go 源代码（main.go、dispatcher.go、interpreter.go ...）
-│   ├── build.sh                 # 编译并拷贝可执行文件到 Xmips/ 运行目录
-│   ├── Xmips/                   # 运行目录
-│   │   ├── xmips_go             # 可执行文件（build.sh 生成）
-│   │   ├── config.ini           # 配置文件
-│   │   ├── file/                # 用户程序目录
-│   │   │   └── run.list         # 运行列表文件
-│   │   └── sysfun/              # 系统函数库目录（用户不可修改）
-│   └── USAGE.md                  # 开机运行与参数说明
-└── xmips_legacy_cpp/            # 旧版 C++ 项目（原 Xmips.exe 实现）
-    ├── src/                     # C++ 源码（component.cpp、asm.cpp、tinyOS.cpp ...）
-    └── Xmips/                   # 旧版运行目录（Xmips.exe、config.ini、file/、sysfun/）
+├── src/                    # Go 源代码（main.go、dispatcher.go、interpreter.go ...）
+├── build.sh                # 编译并拷贝可执行文件到 dist/ 运行目录
+├── dist/                   # 运行目录
+│   ├── xmips               # 可执行文件（build.sh 生成）
+│   ├── config.ini          # 配置文件
+│   ├── file/               # 用户程序目录
+│   │   └── run.list        # 运行列表文件
+│   └── sysfun/             # 系统函数库目录（用户不可修改）
+├── USAGE.md                # 运行与参数说明
+├── IO_SYSCALL_SPEC.md      # 文件/Socket 系统调用规格
+└── tools/                  # 辅助工具（如 md5gen）
 ```
 
-**系统函数**：`xmips_go/Xmips/sysfun/`（旧版在 `xmips_legacy_cpp/Xmips/sysfun/`）下的 `.scp` 源文件统一命名为 `INT_xx.scp`，其中 `xx` 为调用号（对应 #10 中的值）。**仅 `INT 10`（冒泡排序）用 `.scp` 系统函数实现**；`INT 13/14`（输出/输入）与 `INT 15~18`（文件/Socket）均由 **dispatcher 原生执行**（无 `.scp`、不占 PCB）：
+**系统函数**：`dist/sysfun/` 下的 `.scp` 源文件统一命名为 `INT_xx.scp`，其中 `xx` 为调用号（对应 #10 中的值）。**仅 `INT 10`（冒泡排序）用 `.scp` 系统函数实现**；`INT 13/14`（输出/输入）与 `INT 15~18`（文件/Socket）均由 **dispatcher 原生执行**（无 `.scp`、不占 PCB）：
 
 | 调用号 | 实现方式 | 功能 |
 |--------|---------|------|
@@ -573,29 +571,28 @@ config.ini 格式要求：每行 `key=value`（无空格），以 `end` 结尾�
 
 ### 6.2 编辑汇编源程序
 
-用户源程序必须建立在 `xmips_go/Xmips/file/` 目录下，以 `END` 语句结尾（旧版为 `xmips_legacy_cpp/Xmips/file/`）。
+用户源程序必须建立在 `dist/file/` 目录下，以 `END` 语句结尾。
 
-### 6.3 运行 Xmips
+### 6.3 运行 xmips
 
-Go 复刻版编译并运行方式（详见 [`xmips_go/USAGE.md`](xmips_go/USAGE.md)）：
+编译并运行方式（详见 [`USAGE.md`](USAGE.md)）：
 
 ```
-cd xmips_go
-./build.sh            # 1. 编译 src/ 并将可执行文件拷贝到 Xmips/xmips
+./build.sh            # 1. 编译 src/ 并将可执行文件拷贝到 dist/xmips
 ```
 
 运行（**可从任意目录直接调用**，运行根目录 = 可执行文件所在目录）：
 
 ```
-cd Xmips && ./xmips            # A. 无参数 → 从 file/run.list 读取要运行的程序
-./xmips XXX.cupa               # B. 指定程序：优先当前目录，其次 Xmips/file/ 目录
-./xmips /绝对/路径/XXX.cupa     # C. 指定程序的绝对/相对路径
-./xmips update                 # D. 重建系统函数库（重汇编 sysfun/*.scp 生成 .co）
+cd dist && ./xmips            # A. 无参数 → 从 file/run.list 读取要运行的程序
+./xmips XXX.cupa              # B. 指定程序：优先当前目录，其次 dist/file/ 目录
+./xmips /绝对/路径/XXX.cupa    # C. 指定程序的绝对/相对路径
+./xmips update                # D. 重建系统函数库（重汇编 sysfun/*.scp 生成 .co）
 ```
 
-- `config.ini`、`file/`、`sysfun/` 均自动定位到 **可执行文件所在目录**（即 `Xmips/`），与当前工作目录无关，因此无需 `cd Xmips` 即可直接运行；
+- `config.ini`、`file/`、`sysfun/` 均自动定位到 **可执行文件所在目录**（即 `dist/`），与当前工作目录无关，因此无需 `cd dist` 即可直接运行；
 - 用户程序 open 的文件为**真实宿主文件**（相对当前工作目录或绝对路径），可直接读写主机任意路径；
-- 建议将 `Xmips/xmips`（或其符号链接）加入 `PATH`，即可在任何目录 `xmips XXX.cupa`。
+- 建议将 `dist/xmips`（或其符号链接）加入 `PATH`，即可在任何目录 `xmips XXX.cupa`。
 
 运行后系统输出依次为：
 1. 系统函数库的汇编源程序

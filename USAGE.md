@@ -7,30 +7,29 @@
 本版本没有 `Xmips.exe` 可执行文件，需要先编译再运行：
 
 ```bash
-cd xmips_go
-./build.sh                # 编译 src/ 并把可执行文件拷贝到 Xmips/xmips
+./build.sh                # 编译 src/ 并把可执行文件拷贝到 dist/xmips
 ```
 
 运行（**可从任意目录直接调用**，运行根目录 = 可执行文件所在目录）：
 
 ```bash
-cd Xmips && ./xmips              # A. 无参数 → 从 file/run.list 读取要运行的程序
-./xmips XXX.cupa                 # B. 指定程序：优先当前目录，其次 Xmips/file/ 目录
-./xmips /绝对/路径/XXX.cupa       # C. 指定程序的绝对或相对路径
-./xmips update                   # D. 重建系统函数库（重汇编 sysfun/*.scp 生成 .co）
+cd dist && ./xmips              # A. 无参数 → 从 file/run.list 读取要运行的程序
+./xmips XXX.cupa                # B. 指定程序：优先当前目录，其次 dist/file/ 目录
+./xmips /绝对/路径/XXX.cupa      # C. 指定程序的绝对或相对路径
+./xmips update                  # D. 重建系统函数库（重汇编 sysfun/*.scp 生成 .co）
 ```
 
-> 注意：`config.ini`、`sysfun/`、`file/` 均自动定位到“可执行文件所在目录”（即 `Xmips/`），与当前工作目录无关，因此无需再 `cd` 到 Xmips 即可直接运行。用户 `open` 的文件为真实宿主文件（相对当前工作目录或绝对路径），可直接读写主机任意路径。建议把 `Xmips/xmips`（或其符号链接）加入 PATH，即可在任何目录执行 `xmips XXX.cupa`。
+> 注意：`config.ini`、`sysfun/`、`file/` 均自动定位到“可执行文件所在目录”（即 `dist/`），与当前工作目录无关，因此无需再 `cd` 到 dist 即可直接运行。用户 `open` 的文件为真实宿主文件（相对当前工作目录或绝对路径），可直接读写主机任意路径。建议把 `dist/xmips`（或其符号链接）加入 PATH，即可在任何目录执行 `xmips XXX.cupa`。
 
 默认运行 `run.list` 中登记的程序（`run.list` 位于 `file/` 目录）。
 
 ## 二、系统目录结构
 
-Xmips 系统目录（`xmips_go/Xmips`）下包括：
+xmips 系统目录（`dist`）下包括：
 
 | 项目 | 说明 |
 |------|------|
-| 可执行文件 | `Xmips/xmips`（位于运行目录内经 `./build.sh` 生成） |
+| 可执行文件 | `dist/xmips`（位于运行目录内经 `./build.sh` 生成） |
 | 配置文件 | `config.ini` |
 | 用户程序目录 | `file` |
 | 系统程序目录 | `sysfun` 存放系统函数库，用户不可修改 |
@@ -41,14 +40,14 @@ Xmips 系统目录（`xmips_go/Xmips`）下包括：
 
 ### 3.1 路径设置
 
-1. 所有的用户汇编源文件都要保存到 `Xmips/file` 目录下。
-2. 运行列表文件 `Xmips/file/run.list` 登记了要汇编和运行的程序名。
+1. 所有的用户汇编源文件都要保存到 `dist/file` 目录下。
+2. 运行列表文件 `dist/file/run.list` 登记了要汇编和运行的程序名。
 3. ABC 汇编源程序对扩展名不做要求，但推荐使用 `.abc` 或 `.cupa`。
 4. `run.list` 必须以 `end`/`END` 结尾，`end`/`END` 之后的内容将不会再被读取。
 
 ### 3.2 参数配置
 
-参数信息保存在 `Xmips/config.ini` 文件中，用户可以修改。可配置参数如下：
+参数信息保存在 `dist/config.ini` 文件中，用户可以修改。可配置参数如下：
 
 - **`<1> delayMode` —— 访存延时模拟**
 
@@ -134,7 +133,7 @@ Xmips 系统目录（`xmips_go/Xmips`）下包括：
 
 ## 四、系统函数约定
 
-系统函数：`Xmips/sysfun` 目录下的 `.scp` 系统函数命名为 `INT_xx.scp`（xx 为系统调用号）。当前仅 INT 10（冒泡排序）使用 `.scp` 系统函数：
+系统函数：`dist/sysfun` 目录下的 `.scp` 系统函数命名为 `INT_xx.scp`（xx 为系统调用号）。当前仅 INT 10（冒泡排序）使用 `.scp` 系统函数：
 
 ```
 INT_10.scp  INT 10 系统调用：冒泡排序（使用 #11、#12）。
@@ -195,7 +194,7 @@ socket write 与 connect/握手均受 `sockTimeout` 约束。
 
 ## 五、编辑汇编源程序
 
-要运行的用户源程序必须建立在 `Xmips/file` 目录下。
+要运行的用户源程序必须建立在 `dist/file` 目录下。
 
 1. 汇编源程序必须以 `END` 语句结尾。
 2. 保存源程序后，在 `file/run.list` 文件中登记要运行的源程序名。

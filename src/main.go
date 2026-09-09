@@ -142,7 +142,7 @@ func rebuildSysfun(e *Editor, a *Assembler, sys *Storage) int {
 
 func main() {
 	// 运行根目录 = 可执行文件所在目录，使 `xmips XXX.cupa` 可从任意目录直接运行，
-	// 而 config.ini / sysfun / file / disk 均自动定位到 Xmips 运行目录
+	// 而 config.ini / sysfun / file / disk 均自动定位到 dist 运行目录
 	if exe, err := os.Executable(); err == nil {
 		if abs, aerr := filepath.Abs(exe); aerr == nil {
 			runDir = filepath.Dir(abs)
@@ -249,7 +249,7 @@ func main() {
 				// 带路径分隔符 → 直接按该路径打开（相对当前目录或绝对路径）
 				pfr, ret = osOpen(prog)
 			} else {
-				// 仅文件名 → 优先当前目录，其次 Xmips 运行目录的 file/ 目录
+				// 仅文件名 → 优先当前目录，其次 dist 运行目录的 file/ 目录
 				if f, err := os.Open(prog); err == nil {
 					pfr, ret = f, 0
 				} else {
