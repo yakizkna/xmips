@@ -457,8 +457,8 @@ func (e *Editor) editorFromFile(scanner *bufio.Scanner, a *Assembler, dataNumInM
 	return -1
 }
 
-// ASM 汇编入口，生成 .co 文件
-func (e *Editor) ASM(f *os.File, a *Assembler, s string) int {
+// ASM 汇编入口，生成 .co 文件（coDir 指定输出目录；空串表示当前目录）
+func (e *Editor) ASM(f *os.File, a *Assembler, s string, coDir string) int {
 	var dataInMData int
 	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
@@ -476,8 +476,9 @@ func (e *Editor) ASM(f *os.File, a *Assembler, s string) int {
 		tmps = tmps[:dotIdx]
 	}
 	tmps += ".co"
+	coPath := coDir + tmps
 
-	coFile, err := os.Create(tmps)
+	coFile, err := os.Create(coPath)
 	if err != nil {
 		return -1
 	}
@@ -495,8 +496,8 @@ func (e *Editor) ASM(f *os.File, a *Assembler, s string) int {
 	return r
 }
 
-// Load 从 .co 文件加载到进程的代码段和数据段
-func Load(p *Process, name string) {
+// Load 从 .co 文件加载到进程的代码段和数据段（coDir 指定 .co 所在目录；空串表示当前目录）
+func Load(p *Process, name string, coDir string) {
 	// 打开 .co 文件
 	coName := name
 	dotIdx := strings.LastIndex(coName, ".")
@@ -504,8 +505,9 @@ func Load(p *Process, name string) {
 		coName = coName[:dotIdx]
 	}
 	coName += ".co"
+	coPath := coDir + coName
 
-	f, err := os.Open(coName)
+	f, err := os.Open(coPath)
 	if err != nil {
 		return
 	}

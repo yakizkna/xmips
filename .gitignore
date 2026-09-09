@@ -3,8 +3,10 @@
 dist/xmips
 
 # 运行生成的字符码文件（.co）
+# sysfun/*.co 由 ./tool.sh build 生成的系统函数中间码，属运行加速产物，不入库
 dist/*.co
 dist/userfile/*.co
+dist/sysfun/*.co
 
 # 运行生成的日志目录（dump.log 等）
 dist/log/

@@ -123,6 +123,15 @@ func osOpen(path string) (*os.File, int) {
 	return f, 0
 }
 
+// removeCo 删除汇编生成的用户程序中间 .co 文件（生成在 cwd，运行后清理）
+func removeCo(name string) {
+	coName := name
+	if d := strings.LastIndex(coName, "."); d >= 0 {
+		coName = coName[:d]
+	}
+	os.Remove(coName + ".co")
+}
+
 // rebuildSysfun 重新汇编所有 .scp 系统函数，生成对应的 .co 文件；返回成功条数
 func rebuildSysfun(e *Editor, a *Assembler, sys *Storage) int {
 	cnt := 0
@@ -132,7 +141,7 @@ func rebuildSysfun(e *Editor, a *Assembler, sys *Storage) int {
 		}
 		fp, ret := sys.getFile(sysFunTable[i], 0)
 		if ret == 0 {
-			if e.ASM(fp, a, sysFunTable[i]) != -1 {
+			if e.ASM(fp, a, sysFunTable[i], sysPath[0]) != -1 { // 写到 sysfun/ 目录
 				cnt++
 			}
 			sys.releaseFile(fp)
@@ -196,18 +205,18 @@ func main() {
 			pptr[i].ID = i
 
 			if updateSysfun == 1 { // 重新汇编系统函数
-				fp, ret := sys.getFile(sysFunTable[i], 0)
-				if ret == 0 {
-					if e.ASM(fp, a, sysFunTable[i]) != -1 {
-						Load(pptr[i], sysFunTable[i])
-						os_.SysCall.put(i, pptr[i])
+					fp, ret := sys.getFile(sysFunTable[i], 0)
+					if ret == 0 {
+						if e.ASM(fp, a, sysFunTable[i], sysPath[0]) != -1 {
+							Load(pptr[i], sysFunTable[i], sysPath[0])
+							os_.SysCall.put(i, pptr[i])
+						}
+						sys.releaseFile(fp)
 					}
-					sys.releaseFile(fp)
+				} else {
+					Load(pptr[i], sysFunTable[i], sysPath[0]) // 从 sysfun/ 加载系统函数 .co（加速）
+					os_.SysCall.put(i, pptr[i])
 				}
-			} else {
-				Load(pptr[i], sysFunTable[i])
-				os_.SysCall.put(i, pptr[i])
-			}
 		}
 	}
 	//************************************************************************************************************
@@ -231,8 +240,9 @@ func main() {
 			if displayMode != 2 {
 				fmt.Printf("process ID:%d\n", pptr.ID)
 			}
-			if e.ASM(pfr, a, name) != -1 {
-				Load(pptr, name)
+			if e.ASM(pfr, a, name, "") != -1 { // 用户程序 .co 生成在 cwd
+				Load(pptr, name, "")
+				removeCo(name) // 运行前即删中间 .co
 				os_.loader(pptr)
 			}
 			return 0
@@ -264,8 +274,9 @@ func main() {
 			if displayMode != 2 {
 				fmt.Printf("process ID:%d\n", pptr.ID)
 			}
-			if e.ASM(pfr, a, prog) != -1 {
-				Load(pptr, prog)
+			if e.ASM(pfr, a, prog, "") != -1 { // 用户程序 .co 生成在 cwd
+				Load(pptr, prog, "")
+				removeCo(prog) // 运行前即删中间 .co
 				os_.loader(pptr)
 			}
 			pfr.Close()

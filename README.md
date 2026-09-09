@@ -578,7 +578,7 @@ config.ini 格式要求：每行 `key=value`（无空格），以 `end` 结尾�
 编译并运行方式（详见 [`USAGE.md`](USAGE.md)）：
 
 ```
-./tool.sh build       # 1. 编译 src/ 并将可执行文件拷贝到 dist/xmips，重建系统函数库
+./tool.sh build       # 1. 编译 src/ 并将可执行文件拷贝到 dist/xmips，重建系统函数库，安装到 ~/.xmips/dist
 ```
 
 运行（**可从任意目录直接调用**，运行根目录 = 可执行文件所在目录）：
