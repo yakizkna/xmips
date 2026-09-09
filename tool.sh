@@ -7,7 +7,12 @@ set -e
 # 切换到脚本所在目录（项目根目录），保证相对路径可靠
 cd "$(dirname "$0")"
 
-HOME_DIR="$HOME/.xmips"
+# 数据根目录：sudo 下 $HOME 会被换成 /root，这里改为落到真实调用用户的家目录，
+# 保证服务用户（如 yaki）能通过默认 $HOME 找到 ~/.xmips
+REAL_USER="${SUDO_USER:-$USER}"
+REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
+REAL_HOME="${REAL_HOME:-$HOME}"
+HOME_DIR="$REAL_HOME/.xmips"
 BIN="/usr/local/bin/xmips"
 
 cmd="${1:-build}"
@@ -27,9 +32,17 @@ case "$cmd" in
     echo "==> 3) 同步运行目录：dist/* -> $HOME_DIR/ ..."
     mkdir -p "$HOME_DIR"
     cp -rf dist/. "$HOME_DIR/"
+    # sudo 安装时数据属主改回真实用户（如 yaki），保证服务能以该用户读写
+    [[ -n "$SUDO_USER" ]] && chown -R "$REAL_USER":"$REAL_USER" "$HOME_DIR"
+    chmod -R u+rwX "$HOME_DIR"
 
     echo "==> 4) 重建系统函数库（$HOME_DIR/sysfun/*.co）..."
-    "$BIN" update
+    if [[ -n "$SUDO_USER" ]]; then
+      # sudo 下以真实用户运行，使其按默认 $HOME 定位到 $HOME_DIR
+      sudo -u "$REAL_USER" env HOME="$REAL_HOME" "$BIN" update
+    else
+      "$BIN" update
+    fi
 
     echo "完成。运行：$BIN"
     echo "  数据目录：$HOME_DIR（config.ini / userfile / sysfun / run.list）"
