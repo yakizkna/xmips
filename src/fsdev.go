@@ -56,6 +56,34 @@ func cleanPath(p string) string {
 	return clean
 }
 
+// diskPath 磁盘沙箱路径解析。diskOnly=1 时把用户路径限制在 <cwd>/diskRoot 内：
+// 拒绝绝对路径、拒绝任何越出 diskRoot 的 .. 穿越；并自动创建磁盘根目录。
+// diskOnly=0 时原样放行（保持既有开放行为，方便本地/示例）。返回可用完整路径与是否允许。
+func diskPath(p string) (string, bool) {
+	if diskOnly == 0 {
+		return p, true
+	}
+	clean := cleanPath(p)
+	if clean == "" {
+		return "", false
+	}
+	// 沙箱内只允许相对路径
+	if filepath.IsAbs(clean) {
+		return "", false
+	}
+	root := filepath.Clean(diskRoot)
+	full := filepath.Join(root, clean)
+	// 用 Rel 判定结果是否仍在 root 之下，杜绝 .. 穿越到沙箱外
+	rel, err := filepath.Rel(root, full)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", false
+	}
+	if mkErr := os.MkdirAll(filepath.Dir(full), 0o755); mkErr != nil {
+		return "", false
+	}
+	return full, true
+}
+
 // do syscall 调用：kind 0=open,1=read,2=write,3=close。
 // 参数均从调用者寄存器/数据段读取，结果返回给调用者（#13 槽写回由 dispatcher 完成）
 func (f *FsDev) fsOpen(pptr *Process, pathPtr, mode int) int {
@@ -120,14 +148,19 @@ func (f *FsDev) fsOpen(pptr *Process, pathPtr, mode int) int {
 		return fd
 	}
 
-	// 文件：直接读写真实主机文件（相对当前工作目录或绝对路径）
+	// 文件：读写真实宿主文件（diskOnly=1 时限制在 diskRoot 沙箱内）
 	p := cleanPath(path)
 	if p == "" {
 		errCheck(200)
 		f.table[fd].used = false
 		return -1
 	}
-	full := p
+	full, ok := diskPath(p)
+	if !ok {
+		errCheck(200)
+		f.table[fd].used = false
+		return -1
+	}
 
 	var flag int
 	switch mode {

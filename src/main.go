@@ -83,6 +83,10 @@ func config() int {
 			if v != "" {
 				diskRoot = v
 			}
+		case "diskOnly":
+			if r == 0 || r == 1 {
+				diskOnly = r
+			}
 		case "sockTimeout":
 			if r > 0 {
 				sockTimeout = r

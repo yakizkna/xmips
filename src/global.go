@@ -148,9 +148,13 @@ var pcbNum = 10        // PCB 数量：系统最大并发进程数
 // wordBits 机器字长（位）：32 或 64。决定通用寄存器与内存中整数的有效位数与进位行为
 var wordBits = 32
 
-// diskRoot 为 config.ini 中的预留配置项。文件系统 open 目前直接读写真实宿主文件
-// （相对当前工作目录或绝对路径），不再强制限定在 disk/ 目录内
+// diskRoot 磁盘沙箱根目录名（相对 cwd）。仅当 diskOnly=1 时生效：
+// 用户文件 open 被限制在该目录内，禁止绝对路径与 .. 越出。
 var diskRoot = "disk"
+
+// diskOnly 置 1 时启用磁盘沙箱：用户文件只允许读写 <cwd>/diskRoot 目录内。
+// 面向公网/不可信用户部署时必须开启，否则 cupa 可用绝对路径读写任意宿主文件。
+var diskOnly = 0
 
 // sockTimeout socket connect/write 超时（毫秒）
 var sockTimeout = 2000
