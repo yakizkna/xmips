@@ -20,7 +20,16 @@ X_HM="/home/${XUSER}/.xmips"
 
 echo "[1/7] git pull"
 cd "$REPO_DIR"
+HEAD_BEFORE="$(git rev-parse HEAD)"
 git pull --ff-only origin master
+HEAD_AFTER="$(git rev-parse HEAD)"
+
+# 本次发生了版本更新，而 bash 读取的仍是旧脚本 → exec 重载新版本再继续，
+# 避免用旧逻辑执行后续步骤（如旧的系统函数库重建 / env 注入写法）。
+if [ "$HEAD_BEFORE" != "$HEAD_AFTER" ]; then
+    echo "  [reload] 版本更新 $HEAD_BEFORE → $HEAD_AFTER，重新加载脚本"
+    exec bash "$0" "$@"
+fi
 
 echo "[2/7] yaki 全量配置（file/socket 开）"
 mkdir -p "$YAKI_HM"
@@ -37,6 +46,8 @@ echo "[3/7] tool.sh build（编译安装 + 同步 yaki ~/.xmips + 重建系统�
 echo "[4/7] 受限账号 $XUSER 数据目录（file/socket 关）"
 id "$XUSER" >/dev/null 2>&1 || sudo useradd -m -s /bin/bash "$XUSER"
 sudo mkdir -p "$X_HM/userfile" "$X_HM/sysfun"
+# 清理历史遗留的嵌套路径（旧脚本误用 env HOME 时留下的 ~/.xmips/.xmips）
+sudo rm -rf "$X_HM/.xmips"
 sudo cp -rf "$YAKI_HM/userfile/." "$X_HM/userfile/"
 sudo cp -rf "$YAKI_HM/sysfun/." "$X_HM/sysfun/"
 if [ -f "$YAKI_HM/config.ini.user" ]; then
