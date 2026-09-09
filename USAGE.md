@@ -7,48 +7,49 @@
 本版本没有 `Xmips.exe` 可执行文件，需要先编译再运行：
 
 ```bash
-./tool.sh build       # 编译 src/ 并把可执行文件拷贝到 dist/xmips、重建系统函数库，并安装到 ~/.xmips/dist
+./tool.sh build       # 编译 → 安装到 /usr/local/bin/xmips；dist/* 同步到 ~/.xmips/；重建系统函数库
+./tool.sh clean       # 卸载：rm -rf ~/.xmips；rm /usr/local/bin/xmips
 ```
 
-运行（**可从任意目录直接调用**，运行根目录 = 可执行文件所在目录）：
+运行（**可从任意目录直接调用**，二进制在 `/usr/local/bin/xmips`、数据在 `~/.xmips/`）：
 
 ```bash
-cd dist && ./xmips              # A. 无参数 → 从 run.list 读取要运行的程序
-./xmips XXX.cupa                # B. 指定程序：优先当前目录，其次 dist/userfile/ 目录
-./xmips /绝对/路径/XXX.cupa      # C. 指定程序的绝对或相对路径
-./xmips update                  # D. 重建系统函数库（重汇编 sysfun/*.scp 生成 .co）
+xmips                           # A. 无参数 → 从 ~/.xmips/run.list 读取要运行的程序
+xmips XXX.cupa                  # B. 指定程序：优先当前目录，其次 ~/.xmips/userfile/ 目录
+xmips /绝对/路径/XXX.cupa        # C. 指定程序的绝对或相对路径
+xmips update                    # D. 重建系统函数库（重汇编 ~/.xmips/sysfun/*.scp 生成 .co）
 ```
 
-> 注意：`config.ini`、`sysfun/`、`userfile/` 均自动定位到“可执行文件所在目录”（即 `dist/`），与当前工作目录无关，因此无需再 `cd` 到 dist 即可直接运行。用户 `open` 的文件为真实宿主文件（相对当前工作目录或绝对路径），可直接读写主机任意路径。建议把 `dist/xmips`（或其符号链接）加入 PATH，即可在任何目录执行 `xmips XXX.cupa`。
+> 注意：`config.ini`、`run.list`、`sysfun/`、`userfile/` 均自动定位到 **`~/.xmips/`**（可被环境变量 `XMIPS_HOME` 覆盖），与当前工作目录无关，因此可在任何目录直接运行。用户 `open` 的文件为真实宿主文件（相对当前工作目录或绝对路径），可直接读写主机任意路径。`xmips` 已安装至 `/usr/local/bin/xmips`（在 PATH 内），任何目录执行 `xmips XXX.cupa` 即可。
 
-默认运行 `run.list` 中登记的程序（`run.list` 位于运行根目录 `dist/`）。
+默认运行 `run.list` 中登记的程序（`run.list` 位于 `~/.xmips/`）。
 
 ## 二、系统目录结构
 
-xmips 系统目录（`dist`）下包括：
+xmips 系统数据目录（`~/.xmips`，由 `./tool.sh build` 从仓库 `dist/` 同步）下包括：
 
 | 项目 | 说明 |
 |------|------|
-| 可执行文件 | `dist/xmips`（位于运行目录内经 `./tool.sh build` 生成） |
+| 可执行文件 | `/usr/local/bin/xmips`（由 `./tool.sh build` 安装） |
 | 配置文件 | `config.ini`（缺省时用内置默认值） |
 | 运行列表 | `run.list` |
 | 用户程序目录 | `userfile` |
 | 系统程序目录 | `sysfun` 存放系统函数库，用户不可修改 |
 
-关于汇编中间产物 `.co`：用户程序在运行时从 `.cupa` 重新汇编，`.co` 生成在**当前运行目录**、装入后**随即删除**；系统函数的 `.co` 则由 `./xmips update` 生成并**常驻 `sysfun/` 目录**（运行时直接加载以加速），`./tool.sh clean` 不会清除该目录。
+关于汇编中间产物 `.co`：用户程序在运行时从 `.cupa` 重新汇编，`.co` 生成在**当前运行目录**、装入后**随即删除**；系统函数的 `.co` 则由 `./xmips update` 生成并**常驻 `~/.xmips/sysfun/` 目录**（运行时直接加载以加速），`./tool.sh clean` 会连同整个 `~/.xmips/` 一起清除。
 
 ## 三、路径设置和参数配置
 
 ### 3.1 路径设置
 
-1. 所有的用户汇编源文件都要保存到 `dist/userfile` 目录下。
-2. 运行列表文件 `run.list`（位于运行根目录 `dist/`）登记了要汇编和运行的程序名。
+1. 所有的用户汇编源文件都要保存到 `~/.xmips/userfile` 目录下。
+2. 运行列表文件 `run.list`（位于 `~/.xmips/`）登记了要汇编和运行的程序名。
 3. ABC 汇编源程序对扩展名不做要求，但推荐使用 `.abc` 或 `.cupa`。
 4. `run.list` 必须以 `end`/`END` 结尾，`end`/`END` 之后的内容将不会再被读取。
 
 ### 3.2 参数配置
 
-参数信息保存在 `dist/config.ini` 文件中，用户可以修改。可配置参数如下：
+参数信息保存在 `~/.xmips/config.ini` 文件中，用户可以修改。可配置参数如下：
 
 - **`<1> delayMode` —— 访存延时模拟**
 
@@ -79,10 +80,10 @@ xmips 系统目录（`dist`）下包括：
 
 - **`<4> updateSysfun` —— 重建系统函数库（已改为独立命令）**
 
-  系统函数库提供了一组用户可以通过软中断调用的 API，用户不可修改。系统函数以 `.scp` 源程序形式保存在 `sysfun/` 目录；汇编后生成 `.co` 字符码文件，**常驻 `sysfun/` 目录**，普通运行时直接加载以加速。若修改了 `sysfun` 下的 `.scp` 源程序或删除了 `.co`，用独立命令重建系统库：
+  系统函数库提供了一组用户可以通过软中断调用的 API，用户不可修改。系统函数以 `.scp` 源程序形式保存在 `~/.xmips/sysfun/` 目录；汇编后生成 `.co` 字符码文件，**常驻 `sysfun/` 目录**，普通运行时直接加载以加速。若修改了 `sysfun` 下的 `.scp` 源程序或删除了 `.co`，用独立命令重建系统库：
 
   ```bash
-  ./xmips update   # 重新汇编 sysfun/*.scp 生成 .co（应在运行目录下执行）
+  xmips update   # 重新汇编 ~/.xmips/sysfun/*.scp 生成 .co
   ```
 
   该命令仅重建系统函数库并退出，不对用户程序做任何执行。

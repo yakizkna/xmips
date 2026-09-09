@@ -116,7 +116,7 @@ var sysFunTable = [10]string{
 	"",
 }
 
-// runDir xmips 运行根目录（可执行文件所在目录）。config.ini、sysfun/userfile 目录、
+// runDir 系统/数据根目录（默认 ~/.xmips，可用 XMIPS_HOME 覆盖）。config.ini、sysfun/userfile 目录、
 // 虚拟磁盘 diskRoot 均以此为基准，使 `xmips XXX.cupa` 可从任意目录直接运行
 var runDir = ""
 

@@ -1,35 +1,44 @@
 #!/usr/bin/env bash
-# xmips 工具脚本
-#   ./tool.sh build   编译 src/、重建系统函数库（.scp -> dist/sysfun/*.co）、并安装到 ~/.xmips/dist
-#   ./tool.sh clean   清除 dist 下除 sysfun/ 外的 .co 中间产物（系统函数 .co 保留以加速）
+# xmips 工具脚本（部署到系统）
+#   ./tool.sh build   编译 xmips → 安装到 /usr/local/bin/xmips；dist/* 同步到 ~/.xmips/；重建系统函数库
+#   ./tool.sh clean   卸载：rm -rf ~/.xmips；rm /usr/local/bin/xmips
 set -e
 
 # 切换到脚本所在目录（项目根目录），保证相对路径可靠
 cd "$(dirname "$0")"
 
-INSTALL_DIR="$HOME/.xmips/dist"
+HOME_DIR="$HOME/.xmips"
+BIN="/usr/local/bin/xmips"
 
 cmd="${1:-build}"
 case "$cmd" in
   build)
-    echo "==> 1) 编译 src/ -> dist/xmips ..."
-    (cd src && go build -o ../dist/xmips)
+    echo "==> 1) 编译 src/xmips ..."
+    TMPBIN="$(mktemp -t xmips.XXXXXX)"
+    (cd src && go build -o "$TMPBIN" .)
 
-    echo "==> 2) 重建系统函数库（写入 dist/sysfun/*.co）..."
-    (cd dist && ./xmips update)
+    echo "==> 2) 安装到 $BIN ..."
+    if ! cp "$TMPBIN" "$BIN" 2>/dev/null; then
+      echo "    无写权限，尝试 sudo ..." && sudo cp "$TMPBIN" "$BIN"
+    fi
+    chmod +x "$BIN"
+    rm -f "$TMPBIN" dist/xmips   # 不再把二进制留在 dist（顺带清掉旧的 dev 残留）
 
-    echo "==> 3) 安装到 $INSTALL_DIR ..."
-    mkdir -p "$INSTALL_DIR"
-    cp -rf dist/. "$INSTALL_DIR/"
+    echo "==> 3) 同步运行目录：dist/* -> $HOME_DIR/ ..."
+    mkdir -p "$HOME_DIR"
+    cp -rf dist/. "$HOME_DIR/"
 
-    echo "完成。安装目录：$INSTALL_DIR"
-    echo "  运行：$INSTALL_DIR/xmips"
-    echo "  系统函数 .co 位于 $INSTALL_DIR/sysfun/，运行时直接读取以加速"
+    echo "==> 4) 重建系统函数库（$HOME_DIR/sysfun/*.co）..."
+    "$BIN" update
+
+    echo "完成。运行：$BIN"
+    echo "  数据目录：$HOME_DIR（config.ini / userfile / sysfun / run.list）"
     ;;
   clean)
-    echo "==> 清除 dist 下除 sysfun/ 外的 .co 文件 ..."
-    find dist -name "*.co" -not -path "dist/sysfun/*" -delete
-    echo "完成。系统函数库 .co（dist/sysfun/）已保留以加速运行。"
+    echo "==> 删除 $HOME_DIR 与 $BIN ..."
+    rm -rf "$HOME_DIR"
+    rm -f "$BIN"
+    echo "完成。已卸载。"
     ;;
   *)
     echo "用法: ./tool.sh [build|clean]"

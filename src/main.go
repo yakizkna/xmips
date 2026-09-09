@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// config 读取系统配置文件 config.ini（位于运行根目录 runDir）
+// config 读取系统配置文件 config.ini（位于系统根目录 runDir，缺省用内置默认值）
 func config() int {
 	f, err := os.Open(filepath.Join(runDir, "config.ini"))
 	if err != nil {
@@ -151,18 +151,20 @@ func rebuildSysfun(e *Editor, a *Assembler, sys *Storage) int {
 }
 
 func main() {
-	// 运行根目录 = 可执行文件所在目录，使 `xmips XXX.cupa` 可从任意目录直接运行，
-	// 而 config.ini / sysfun / file / disk 均自动定位到 dist 运行目录
-	if exe, err := os.Executable(); err == nil {
-		if abs, aerr := filepath.Abs(exe); aerr == nil {
-			runDir = filepath.Dir(abs)
+	// 系统/数据根目录：默认 ~/.xmips（可被环境变量 XMIPS_HOME 覆盖）。
+	// xmips 安装到 /usr/local/bin 后，config.ini / userfile / sysfun / run.list / disk
+	// 均定位到该目录，程序可从任意目录直接用 `xmips XXX.cupa` 运行
+	runDir = os.Getenv("XMIPS_HOME")
+	if runDir == "" {
+		if h, err := os.UserHomeDir(); err == nil {
+			runDir = filepath.Join(h, ".xmips")
 		}
 	}
 	if runDir == "" {
 		runDir, _ = os.Getwd()
 	}
 
-	// 系统目录基于 runDir（原相对 "./sysfun/"、"./userfile/" 随 cwd 变化，改为固定到运行目录）
+	// 系统目录基于 runDir（原相对 "./sysfun/"、"./userfile/" 随 cwd 变化，改为固定到系统根目录）
 	sysPath[0] = filepath.Join(runDir, "sysfun") + string(filepath.Separator)
 	sysPath[1] = filepath.Join(runDir, "userfile") + string(filepath.Separator)
 
@@ -258,7 +260,7 @@ func main() {
 				// 带路径分隔符 → 直接按该路径打开（相对当前目录或绝对路径）
 				pfr, ret = osOpen(prog)
 			} else {
-				// 仅文件名 → 优先当前目录，其次 dist 运行目录的 userfile/ 目录
+				// 仅文件名 → 优先当前目录，其次系统根目录（~/.xmips）的 userfile/ 目录
 				if f, err := os.Open(prog); err == nil {
 					pfr, ret = f, 0
 				} else {
@@ -280,7 +282,7 @@ func main() {
 				os_.loader(pptr)
 			}
 			pfr.Close()
-		} else { // 从 run.list 读取（run.list 位于运行根目录 dist/，而非 userfile/）
+		} else { // 从 run.list 读取（run.list 位于系统根目录 ~/.xmips/，而非 userfile/）
 			run, err := os.Open(filepath.Join(runDir, runList))
 			if err != nil {
 				fmt.Println("cannot open run.list")

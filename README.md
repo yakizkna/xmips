@@ -515,8 +515,7 @@ SUM 的字符码文件：
 xmips/
 ├── src/                    # Go 源代码（main.go、dispatcher.go、interpreter.go ...）
 ├── tool.sh                 # 工具脚本：./tool.sh build / clean
-├── dist/                   # 运行目录
-│   ├── xmips               # 可执行文件（tool.sh build 生成）
+├── dist/                   # 运行目录（build 时同步到 ~/.xmips/，可执行文件不保留在此）
 │   ├── config.ini          # 配置文件（缺省时用内置默认值）
 │   ├── run.list            # 运行列表文件
 │   ├── userfile/           # 用户程序目录
@@ -578,21 +577,22 @@ config.ini 格式要求：每行 `key=value`（无空格），以 `end` 结尾�
 编译并运行方式（详见 [`USAGE.md`](USAGE.md)）：
 
 ```
-./tool.sh build       # 1. 编译 src/ 并将可执行文件拷贝到 dist/xmips，重建系统函数库，安装到 ~/.xmips/dist
+./tool.sh build       # 1. 编译；把 xmips 安装到 /usr/local/bin/xmips，dist/* 同步到 ~/.xmips/，重建系统函数库
+./tool.sh clean       # 2. 卸载：rm -rf ~/.xmips；rm /usr/local/bin/xmips
 ```
 
-运行（**可从任意目录直接调用**，运行根目录 = 可执行文件所在目录）：
+运行（**可从任意目录直接调用**，二进制在 `/usr/local/bin/xmips`、数据在 `~/.xmips/`）：
 
 ```
-cd dist && ./xmips            # A. 无参数 → 从 run.list 读取要运行的程序
-./xmips XXX.cupa              # B. 指定程序：优先当前目录，其次 dist/userfile/ 目录
-./xmips /绝对/路径/XXX.cupa    # C. 指定程序的绝对/相对路径
-./xmips update                # D. 重建系统函数库（重汇编 sysfun/*.scp 生成 .co）
+xmips                      # A. 无参数 → 从 ~/.xmips/run.list 读取要运行的程序
+xmips XXX.cupa             # B. 指定程序：优先当前目录，其次 ~/.xmips/userfile/ 目录
+xmips /绝对/路径/XXX.cupa   # C. 指定程序的绝对/相对路径
+xmips update               # D. 重建系统函数库（重汇编 ~/.xmips/sysfun/*.scp 生成 .co）
 ```
 
-- `config.ini`、`userfile/`、`sysfun/` 均自动定位到 **可执行文件所在目录**（即 `dist/`），与当前工作目录无关，因此无需 `cd dist` 即可直接运行；
+- `config.ini`、`run.list`、`userfile/`、`sysfun/` 均自动定位到 **`~/.xmips/`**（可被环境变量 `XMIPS_HOME` 覆盖），与当前工作目录无关，因此可在任意目录直接运行；
 - 用户程序 open 的文件为**真实宿主文件**（相对当前工作目录或绝对路径），可直接读写主机任意路径；
-- 建议将 `dist/xmips`（或其符号链接）加入 `PATH`，即可在任何目录 `xmips XXX.cupa`。
+- 可执行文件安装在 `/usr/local/bin/xmips`，已入 `PATH`，任何目录执行 `xmips XXX.cupa` 即可。
 
 运行后系统输出依次为：
 1. 系统函数库的汇编源程序
