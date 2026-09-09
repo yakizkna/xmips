@@ -328,7 +328,8 @@ func (d *Dispatcher) swap2(im *Interpreter) int {
 				if c == 0 || c < 0 {
 					break
 				}
-				printf("%c", rune(byte(c)))
+				// 按原始字节输出（直接写 stdout），避免 rune 被 UTF-8 重编码导致非 ASCII 双重编码
+				os.Stdout.Write([]byte{byte(c)})
 				addr++
 			}
 			d.readyb.insertToHead(d.runb)
