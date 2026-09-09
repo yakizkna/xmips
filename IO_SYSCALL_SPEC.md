@@ -188,10 +188,10 @@ config.ini 新增：
 
 ## 9. 验证结果
 
-1. 文件写 → 读回：写 `disk/test.txt`，再 open 同文件 read 回显比对 ✅（`file/FILEIO.cupa`）
+1. 文件写 → 读回：写 `disk/test.txt`，再 open 同文件 read 回显比对 ✅（`userfile/FILEIO.cupa`）
 2. 越界防护：`open "../etc/passwd"` 拒绝（错误 -1）。
-3. **HTTPS 抓取 + 写文件** ✅（`file/NETTOUR.cupa`）：`sock:ace.yakidev.top:443` 自动 TLS → 发 HTTP GET → 分块 read → 写 `disk/tour.html`，22KB 完整 HTML。
-4. **单进程防死锁** ✅（`file/HTIMEOUT.cupa` + 本地静默服务器，accept 后 30s 不发数据不关闭）：程序约 4s 内退出，证明 `sockTimeout` 读超时生效。
+3. **HTTPS 抓取 + 写文件** ✅（`userfile/NETTOUR.cupa`）：`sock:ace.yakidev.top:443` 自动 TLS → 发 HTTP GET → 分块 read → 写 `disk/tour.html`，22KB 完整 HTML。
+4. **单进程防死锁** ✅（`userfile/HTIMEOUT.cupa` + 本地静默服务器，accept 后 30s 不发数据不关闭）：程序约 4s 内退出，证明 `sockTimeout` 读超时生效。
 5. 回归：`SUM`、`BUBBLE_INT`、`FILEIO` 正常；`INT 13/14` 不受影响 ✅
 6. 字长 / 多进程让出时间片：待补充专项验证。
 

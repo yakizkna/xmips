@@ -13,15 +13,15 @@
 运行（**可从任意目录直接调用**，运行根目录 = 可执行文件所在目录）：
 
 ```bash
-cd dist && ./xmips              # A. 无参数 → 从 file/run.list 读取要运行的程序
-./xmips XXX.cupa                # B. 指定程序：优先当前目录，其次 dist/file/ 目录
+cd dist && ./xmips              # A. 无参数 → 从 run.list 读取要运行的程序
+./xmips XXX.cupa                # B. 指定程序：优先当前目录，其次 dist/userfile/ 目录
 ./xmips /绝对/路径/XXX.cupa      # C. 指定程序的绝对或相对路径
 ./xmips update                  # D. 重建系统函数库（重汇编 sysfun/*.scp 生成 .co）
 ```
 
-> 注意：`config.ini`、`sysfun/`、`file/` 均自动定位到“可执行文件所在目录”（即 `dist/`），与当前工作目录无关，因此无需再 `cd` 到 dist 即可直接运行。用户 `open` 的文件为真实宿主文件（相对当前工作目录或绝对路径），可直接读写主机任意路径。建议把 `dist/xmips`（或其符号链接）加入 PATH，即可在任何目录执行 `xmips XXX.cupa`。
+> 注意：`config.ini`、`sysfun/`、`userfile/` 均自动定位到“可执行文件所在目录”（即 `dist/`），与当前工作目录无关，因此无需再 `cd` 到 dist 即可直接运行。用户 `open` 的文件为真实宿主文件（相对当前工作目录或绝对路径），可直接读写主机任意路径。建议把 `dist/xmips`（或其符号链接）加入 PATH，即可在任何目录执行 `xmips XXX.cupa`。
 
-默认运行 `run.list` 中登记的程序（`run.list` 位于 `file/` 目录）。
+默认运行 `run.list` 中登记的程序（`run.list` 位于运行根目录 `dist/`）。
 
 ## 二、系统目录结构
 
@@ -30,8 +30,9 @@ xmips 系统目录（`dist`）下包括：
 | 项目 | 说明 |
 |------|------|
 | 可执行文件 | `dist/xmips`（位于运行目录内经 `./build.sh` 生成） |
-| 配置文件 | `config.ini` |
-| 用户程序目录 | `file` |
+| 配置文件 | `config.ini`（缺省时用内置默认值） |
+| 运行列表 | `run.list` |
+| 用户程序目录 | `userfile` |
 | 系统程序目录 | `sysfun` 存放系统函数库，用户不可修改 |
 
 除此之外，汇编产生的字符码文件（扩展名为 `.co`）也会生成在当前运行目录下。
@@ -40,8 +41,8 @@ xmips 系统目录（`dist`）下包括：
 
 ### 3.1 路径设置
 
-1. 所有的用户汇编源文件都要保存到 `dist/file` 目录下。
-2. 运行列表文件 `dist/file/run.list` 登记了要汇编和运行的程序名。
+1. 所有的用户汇编源文件都要保存到 `dist/userfile` 目录下。
+2. 运行列表文件 `run.list`（位于运行根目录 `dist/`）登记了要汇编和运行的程序名。
 3. ABC 汇编源程序对扩展名不做要求，但推荐使用 `.abc` 或 `.cupa`。
 4. `run.list` 必须以 `end`/`END` 结尾，`end`/`END` 之后的内容将不会再被读取。
 
@@ -188,16 +189,16 @@ socket write 与 connect/握手均受 `sockTimeout` 约束。
 | -4 | write 缓冲满 |
 | -5 | socket 关闭 / 读写错误 |
 
-示例：`file/NETTOUR.cupa`（HTTPS 抓取 `https://ace.yakidev.top/tour` 并写入 `tour.html`）。
+示例：`userfile/NETTOUR.cupa`（HTTPS 抓取 `https://ace.yakidev.top/tour` 并写入 `tour.html`）。
 
 配置项：`sockTimeout`（socket 超时毫秒）；`diskRoot` 为预留项（不再强制限定磁盘目录）。
 
 ## 五、编辑汇编源程序
 
-要运行的用户源程序必须建立在 `dist/file` 目录下。
+要运行的用户源程序必须建立在 `dist/userfile` 目录下。
 
 1. 汇编源程序必须以 `END` 语句结尾。
-2. 保存源程序后，在 `file/run.list` 文件中登记要运行的源程序名。
+2. 保存源程序后，在 `run.list` 文件中登记要运行的源程序名。
 3. 按“一、运行方法”重新运行程序即可汇编并执行。
 
 ### 5.1 函数调用（CALL/RET）
@@ -217,13 +218,13 @@ Xmips 通过 `CALL` / `RET` 实现子程序调用（无栈帧、无局部变量�
 | 标签语法 | 必须是 `: name`（冒号前缀），`name:` 会报 `RES=14` |
 | 子程序引用 | CALL 前向引用其后定义的标签是允许的（同前向跳转，回填两遍） |
 
-示例见 `file/BUBBLE_CALL.cupa`（`CALL BUBBLE` 冒泡排序、`CALL PRINUM` 数字输出两个用户子程序）。
+示例见 `userfile/BUBBLE_CALL.cupa`（`CALL BUBBLE` 冒泡排序、`CALL PRINUM` 数字输出两个用户子程序）。
 
 ### 5.2 注意事项
 
 - `DIV 寄存器, 10` 会把**余数写入 `#0`**；若除数目标恰好是 `#0`，商会被余数覆盖，导致死循环。需另辟工作寄存器（参考 `BUBBLE_CALL.cupa` 中 `PRINUM` 用 `#8` 作 num 副本）。
 
-### 5.3 MD5 计算器（`file/MD5.cupa`）
+### 5.3 MD5 计算器（`userfile/MD5.cupa`）
 
 - 需 `bitMode=32`（见 3.3 配置）。标准输入内容 → 输出 32 位小写十六进制 MD5。
 - **输入上限 448 字节**（单块实现，留 64 位长度字段）：

@@ -12,7 +12,8 @@ import (
 func config() int {
 	f, err := os.Open(filepath.Join(runDir, "config.ini"))
 	if err != nil {
-		return -1
+		// 无 config.ini 时直接使用内置默认值（已与模板 config.ini 对齐），不视为错误
+		return 0
 	}
 	defer f.Close()
 
@@ -152,13 +153,11 @@ func main() {
 		runDir, _ = os.Getwd()
 	}
 
-	// 系统目录基于 runDir（原相对 "./sysfun/"、"./file/" 随 cwd 变化，改为固定到运行目录）
+	// 系统目录基于 runDir（原相对 "./sysfun/"、"./userfile/" 随 cwd 变化，改为固定到运行目录）
 	sysPath[0] = filepath.Join(runDir, "sysfun") + string(filepath.Separator)
-	sysPath[1] = filepath.Join(runDir, "file") + string(filepath.Separator)
+	sysPath[1] = filepath.Join(runDir, "userfile") + string(filepath.Separator)
 
-	if config() != 0 {
-		fmt.Println("system parameters config error!")
-	}
+	config() // 读取 config.ini 覆盖默认值；无该文件则沿用内置默认
 	initDump() // 开启 dump 日志（dump=1 时创建 dump.log）
 
 	// 独立命令：./xmips update → 重建系统函数库（重新汇编 sysfun/*.scp 生成 .co）
@@ -219,7 +218,7 @@ func main() {
 	//   1) ./xmips            -> 从 run.list 读取要运行的程序
 	//   2) ./xmips prog.cupa  -> 直接用命令行参数指定程序，忽略 run.list
 	{
-		// 从 file 目录加载用户程序（run.list 场景）
+		// 从 userfile 目录加载用户程序（run.list 场景）
 		loadFromDisk := func(name string, id int) int {
 			pfr, ret2 := disk.getFile(name, 0)
 			if ret2 != 0 {
@@ -239,17 +238,17 @@ func main() {
 			return 0
 		}
 
-		if len(os.Args) >= 2 { // 命令行指定程序（可直接传 file 目录内文件名或任意路径）
+		if len(os.Args) >= 2 { // 命令行指定程序（可直接传 userfile 目录内文件名或任意路径）
 			singleProc = true // 单进程模式：网络 read 用阻塞式
 			prog := os.Args[1]
-			// 若参数带路径分隔符或文件不存在于 file 目录，则当作直接路径打开
+			// 若参数带路径分隔符或文件不存在于 userfile 目录，则当作直接路径打开
 			var pfr *os.File
 			var ret int
 			if strings.ContainsAny(prog, `/\`) {
 				// 带路径分隔符 → 直接按该路径打开（相对当前目录或绝对路径）
 				pfr, ret = osOpen(prog)
 			} else {
-				// 仅文件名 → 优先当前目录，其次 dist 运行目录的 file/ 目录
+				// 仅文件名 → 优先当前目录，其次 dist 运行目录的 userfile/ 目录
 				if f, err := os.Open(prog); err == nil {
 					pfr, ret = f, 0
 				} else {
@@ -270,9 +269,9 @@ func main() {
 				os_.loader(pptr)
 			}
 			pfr.Close()
-		} else { // 从 run.list 读取
-			run, ret := disk.getFile(runList, 0)
-			if ret != 0 {
+		} else { // 从 run.list 读取（run.list 位于运行根目录 dist/，而非 userfile/）
+			run, err := os.Open(filepath.Join(runDir, runList))
+			if err != nil {
 				fmt.Println("cannot open run.list")
 				return
 			}

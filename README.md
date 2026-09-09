@@ -340,7 +340,7 @@ Xmips 通过 `CALL`/`RET` 支持子程序调用（无栈帧、无局部变量，
 - 汇编器在第一个 `END` 终止，故**全文件只能有一个 `END`**（放末尾），主程序结束改用 `HALT`（等效正常结束、不终止汇编）；
 - 标签须以 `: name` 前缀定义；`CALL` 可前向引用其后定义的标签。
 
-完整示例见 [`file/BUBBLE_CALL.cupa`](dist/file/BUBBLE_CALL.cupa)：用两个用户子程序完成冒泡排序并输出——
+完整示例见 [`file/BUBBLE_CALL.cupa`](dist/userfile/BUBBLE_CALL.cupa)：用两个用户子程序完成冒泡排序并输出——
 
 ```text
 51 40 22 17 16 13 5 4 3 2
@@ -396,7 +396,7 @@ MOV #0 #13      ~ #13=1 表示缓冲区满，可再次 INT 14 继续读
 | `tlssock:host:port` | TCP 客户端连接，**强制 TLS**（`ServerName`=host，握手受 `sockTimeout` 约束） |
 | 其它 | 文件，映射到**真实宿主文件**：`#11` 为文件路径（相对当前工作目录或绝对路径），直接读写；`sock:`/`tlssock:` 为 TCP 客户端（`sock:443` 或 `tlssock:` 自动启用 TLS） |
 
-`#12` 模式：0=只读，1=写（截断），2=读写追加（文件有效）。返回 fd 存 `#9`（fd 从 3 起）。读写网络/文件的字节流：`INT 16` 从 `#9` 读 `#12` 字节存入 `#11` 指向的数据段；`INT 17` 把 `#11` 处 `#12` 字节写入 `#9`。Cupa 可据此实现真正的 **HTTPS 抓取 + 写文件**（例见 `file/NETTOUR.cupa`）。
+`#12` 模式：0=只读，1=写（截断），2=读写追加（文件有效）。返回 fd 存 `#9`（fd 从 3 起）。读写网络/文件的字节流：`INT 16` 从 `#9` 读 `#12` 字节存入 `#11` 指向的数据段；`INT 17` 把 `#11` 处 `#12` 字节写入 `#9`。Cupa 可据此实现真正的 **HTTPS 抓取 + 写文件**（例见 `userfile/NETTOUR.cupa`）。
 
 读写阻塞语义由**单进程模式**决定（`./xmips xxx.cupa` 直跑，或 `run.list` 恰有 1 个文件）：
 
@@ -517,9 +517,9 @@ xmips/
 ├── build.sh                # 编译并拷贝可执行文件到 dist/ 运行目录
 ├── dist/                   # 运行目录
 │   ├── xmips               # 可执行文件（build.sh 生成）
-│   ├── config.ini          # 配置文件
-│   ├── file/               # 用户程序目录
-│   │   └── run.list        # 运行列表文件
+│   ├── config.ini          # 配置文件（缺省时用内置默认值）
+│   ├── run.list            # 运行列表文件
+│   ├── userfile/           # 用户程序目录
 │   └── sysfun/             # 系统函数库目录（用户不可修改）
 ├── USAGE.md                # 运行与参数说明
 ├── IO_SYSCALL_SPEC.md      # 文件/Socket 系统调用规格
@@ -571,7 +571,7 @@ config.ini 格式要求：每行 `key=value`（无空格），以 `end` 结尾�
 
 ### 6.2 编辑汇编源程序
 
-用户源程序必须建立在 `dist/file/` 目录下，以 `END` 语句结尾。
+用户源程序必须建立在 `dist/userfile/` 目录下，以 `END` 语句结尾。
 
 ### 6.3 运行 xmips
 
@@ -584,13 +584,13 @@ config.ini 格式要求：每行 `key=value`（无空格），以 `end` 结尾�
 运行（**可从任意目录直接调用**，运行根目录 = 可执行文件所在目录）：
 
 ```
-cd dist && ./xmips            # A. 无参数 → 从 file/run.list 读取要运行的程序
-./xmips XXX.cupa              # B. 指定程序：优先当前目录，其次 dist/file/ 目录
+cd dist && ./xmips            # A. 无参数 → 从 run.list 读取要运行的程序
+./xmips XXX.cupa              # B. 指定程序：优先当前目录，其次 dist/userfile/ 目录
 ./xmips /绝对/路径/XXX.cupa    # C. 指定程序的绝对/相对路径
 ./xmips update                # D. 重建系统函数库（重汇编 sysfun/*.scp 生成 .co）
 ```
 
-- `config.ini`、`file/`、`sysfun/` 均自动定位到 **可执行文件所在目录**（即 `dist/`），与当前工作目录无关，因此无需 `cd dist` 即可直接运行；
+- `config.ini`、`userfile/`、`sysfun/` 均自动定位到 **可执行文件所在目录**（即 `dist/`），与当前工作目录无关，因此无需 `cd dist` 即可直接运行；
 - 用户程序 open 的文件为**真实宿主文件**（相对当前工作目录或绝对路径），可直接读写主机任意路径；
 - 建议将 `dist/xmips`（或其符号链接）加入 `PATH`，即可在任何目录 `xmips XXX.cupa`。
 

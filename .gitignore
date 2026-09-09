@@ -4,7 +4,7 @@ dist/xmips
 
 # 运行生成的字符码文件（.co）
 dist/*.co
-dist/file/*.co
+dist/userfile/*.co
 
 # 运行生成的日志目录（dump.log 等）
 dist/log/

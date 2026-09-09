@@ -116,18 +116,18 @@ var sysFunTable = [10]string{
 	"",
 }
 
-// runDir xmips 运行根目录（可执行文件所在目录）。config.ini、sysfun/file 目录、
+// runDir xmips 运行根目录（可执行文件所在目录）。config.ini、sysfun/userfile 目录、
 // 虚拟磁盘 diskRoot 均以此为基准，使 `xmips XXX.cupa` 可从任意目录直接运行
 var runDir = ""
 
 var sysPath = [2]string{
 	"./sysfun/",
-	"./file/",
+	"./userfile/",
 }
 
 var runList = "run.list"
 
-var displayMode = 0 // 0 hide the content of the process loaded to system; 1 show all information
+var displayMode = 2 // 0 hide the content of the process loaded to system; 1 show all information
 
 var reportLevel = 0 // 0 report Error, 1 report Normal and Error, 2 report all
 
@@ -135,18 +135,18 @@ var delayMode = 0 // 0 不延时, 1 延时
 
 var updateSysfun = 0 // 碳由历史保留：普通运行直接 Load .co；重建系统库请用 `./xmips update`
 
-// config.ini 可配置的系统参数（默认值与代码原硬编码一致）
-var codeSize = 800       // 用户进程代码区长度（字）
-var dataSize = 200       // 用户进程数据区长度（字）
-var stackSize = 50       // 用户进程栈区长度（字）
-var sysfunCodeSize = 800 // 系统函数代码区长度（字）
-var sysfunDataSize = 10  // 系统函数数据区长度（字，运行时指向调用者数据段）
-var sysfunStackSize = 40 // 系统函数栈区长度（字）
-var cycleTimes = 30      // 时间片大小：每个时间片最多执行的指令数
-var pcbNum = 40          // PCB 数量：系统最大并发进程数
+// config.ini 可配置的系统参数（默认值已与模板 config.ini 对齐，缺省 config.ini 时按此运行）
+var codeSize = 8000     // 用户进程代码区长度（字）
+var dataSize = 2000     // 用户进程数据区长度（字）
+var stackSize = 200     // 用户进程栈区长度（字）
+var sysfunCodeSize = 1000 // 系统函数代码区长度（字）
+var sysfunDataSize = 1000 // 系统函数数据区长度（字，运行时指向调用者数据段）
+var sysfunStackSize = 100 // 系统函数栈区长度（字）
+var cycleTimes = 30    // 时间片大小：每个时间片最多执行的指令数
+var pcbNum = 10        // PCB 数量：系统最大并发进程数
 
 // wordBits 机器字长（位）：32 或 64。决定通用寄存器与内存中整数的有效位数与进位行为
-var wordBits = 64
+var wordBits = 32
 
 // diskRoot 为 config.ini 中的预留配置项。文件系统 open 目前直接读写真实宿主文件
 // （相对当前工作目录或绝对路径），不再强制限定在 disk/ 目录内
