@@ -514,9 +514,9 @@ SUM 的字符码文件：
 ```
 xmips/
 ├── src/                    # Go 源代码（main.go、dispatcher.go、interpreter.go ...）
-├── build.sh                # 编译并拷贝可执行文件到 dist/ 运行目录
+├── tool.sh                 # 工具脚本：./tool.sh build / clean
 ├── dist/                   # 运行目录
-│   ├── xmips               # 可执行文件（build.sh 生成）
+│   ├── xmips               # 可执行文件（tool.sh build 生成）
 │   ├── config.ini          # 配置文件（缺省时用内置默认值）
 │   ├── run.list            # 运行列表文件
 │   ├── userfile/           # 用户程序目录
@@ -578,7 +578,7 @@ config.ini 格式要求：每行 `key=value`（无空格），以 `end` 结尾�
 编译并运行方式（详见 [`USAGE.md`](USAGE.md)）：
 
 ```
-./build.sh            # 1. 编译 src/ 并将可执行文件拷贝到 dist/xmips
+./tool.sh build       # 1. 编译 src/ 并将可执行文件拷贝到 dist/xmips，重建系统函数库
 ```
 
 运行（**可从任意目录直接调用**，运行根目录 = 可执行文件所在目录）：

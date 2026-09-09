@@ -7,7 +7,7 @@
 本版本没有 `Xmips.exe` 可执行文件，需要先编译再运行：
 
 ```bash
-./build.sh                # 编译 src/ 并把可执行文件拷贝到 dist/xmips
+./tool.sh build       # 编译 src/ 并把可执行文件拷贝到 dist/xmips、重建系统函数库
 ```
 
 运行（**可从任意目录直接调用**，运行根目录 = 可执行文件所在目录）：
@@ -29,7 +29,7 @@ xmips 系统目录（`dist`）下包括：
 
 | 项目 | 说明 |
 |------|------|
-| 可执行文件 | `dist/xmips`（位于运行目录内经 `./build.sh` 生成） |
+| 可执行文件 | `dist/xmips`（位于运行目录内经 `./tool.sh build` 生成） |
 | 配置文件 | `config.ini`（缺省时用内置默认值） |
 | 运行列表 | `run.list` |
 | 用户程序目录 | `userfile` |
