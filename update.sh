@@ -34,7 +34,9 @@ fi
 echo "[2/7] yaki 全量配置（file/socket 开）"
 mkdir -p "$YAKI_HM"
 YCFG="$YAKI_HM/config.ini"
-[ -f "$YCFG" ] || { cp dist/config.ini "$YCFG"; }
+# 每次更新都用 dist/config.ini 覆盖 yaki 全量配置（含内存区段等），而非仅在缺失时拷贝，
+# 使上游 config 调整能随更新同步。文件/socket 仍强制按 plus 策略置 1。
+cp -f dist/config.ini "$YCFG"
 sed -i -E 's/^fileEnable=.*/fileEnable=1/; s/^sockEnable=.*/sockEnable=1/' "$YCFG"
 grep -q '^fileEnable=' "$YCFG" || echo 'fileEnable=1' >> "$YCFG"
 grep -q '^sockEnable=' "$YCFG" || echo 'sockEnable=1' >> "$YCFG"
