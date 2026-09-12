@@ -52,8 +52,8 @@ MOV STATUS 0
 MOV SCENE 1
 MOV GAMEOVER 0
 
-~ 显示欢迎信息
-MOV #11 10
+~ 显示欢迎信息（MSG0 实际地址=5）
+MOV #11 5
 MOV #10 13
 INT
 
@@ -73,16 +73,16 @@ JMP END_GAME
 
 ~ ========== 场景1：森林 ==========
 : SCENE1
-MOV #11 37
+MOV #11 40
 MOV #10 13
 INT
 
-MOV #11 68
+MOV #11 70
 MOV #10 13
 INT
 
 ~ 读入玩家选择
-MOV #11 200
+MOV #11 250
 MOV #12 20
 MOV #10 14
 INT
@@ -114,12 +114,12 @@ JMP SCENE1
 
 ~ ========== 场景2：龙的挑战 ==========
 : SCENE2
-MOV #11 102
+MOV #11 100
 MOV #10 13
 INT
 
 ~ 读入选择
-MOV #11 200
+MOV #11 250
 MOV #12 20
 MOV #10 14
 INT
@@ -156,12 +156,12 @@ JMP GAME_LOOP
 
 ~ ========== 场景3：宝箱 ==========
 : SCENE3
-MOV #11 136
+MOV #11 140
 MOV #10 13
 INT
 
 ~ 读入选择
-MOV #11 200
+MOV #11 250
 MOV #12 20
 MOV #10 14
 INT
@@ -192,7 +192,7 @@ CMP STATUS 1
 JE SHOW_WIN
 
 ~ 失败结局
-MOV #11 170
+MOV #11 205
 MOV #10 13
 INT
 
@@ -200,7 +200,7 @@ JMP PRINT_GOLD
 
 : SHOW_WIN
 ~ 胜利结局
-MOV #11 154
+MOV #11 180
 MOV #10 13
 INT
 
