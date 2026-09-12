@@ -209,7 +209,6 @@ MOV #0 GOLD
 CALL PRINT_NUM
 MOV #13 10
 HALT
-END
 
 ~ ========== 输出数字子程序 ==========
 : PRINT_NUM
@@ -246,3 +245,4 @@ JMP PN_POP
 
 : PN_END
 RET
+END
