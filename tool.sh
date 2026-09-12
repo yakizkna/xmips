@@ -10,7 +10,14 @@ cd "$(dirname "$0")"
 # 数据根目录：sudo 下 $HOME 会被换成 /root，这里改为落到真实调用用户的家目录，
 # 保证服务用户（如 yaki）能通过默认 $HOME 找到 ~/.xmips
 REAL_USER="${SUDO_USER:-$USER}"
-REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
+# 获取真实用户家目录：getent 为 Linux 专有，macOS 无此命令；
+# 用 bash 的 ~user 展开兜底（跨平台可用，且 sudo 下也能正确解析真实用户家目录）
+if command -v getent >/dev/null 2>&1; then
+  REAL_HOME="$(getent passwd "$REAL_USER" 2>/dev/null | cut -d: -f6)"
+fi
+if [[ -z "$REAL_HOME" ]]; then
+  REAL_HOME="$(eval echo "~$REAL_USER" 2>/dev/null)"
+fi
 REAL_HOME="${REAL_HOME:-$HOME}"
 HOME_DIR="$REAL_HOME/.xmips"
 BIN="/usr/local/bin/xmips"
