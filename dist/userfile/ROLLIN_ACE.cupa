@@ -1,12 +1,13 @@
 ~ ============================================================
-~ REVERSAL.cupa —— 九下追分（RA REVERSE）
+~ ROLLIN_ACE.cupa —— 九下追分（RA REVERSE，含好坏球）
 ~ 开局 0-2 落后，九下面临无人出局。
-~ 每次打席掷骰：OUT x6 / 1B x3 / 2B x2 / 3B x1 / HR x1（共 13）
-~ 每球更新垒况与比分；
-~   3 出局          -> 失败
-~   得分反超(>=3)   -> 逆转取胜
+~ 投手每球随坏出「好球 / 坏球」；玩家选择：
+~   J -> HIT（挥棒）   K -> SEE（观看）
+~   好球+挥棒 -> 进入击球结果（挥空x3 OUTx6 1Bx3 2Bx2 3Bx1 HRx1）
+~   看坏球 -> 坏数+1（4 坏 -> 保送）
+~   看好球 / 挥到坏球 -> 好数+1（3 好 -> 三振出局）
+~ 终局：3 出局 -> LOST；得分反超(>=3) -> 逆转取胜
 ~ 运行：xmips ROLLIN_ACE.cupa
-~   逐步推进：见 HIT? 就回车挥棒，掷一球并更新局面，直到 3 出局或逆转。
 ~ ============================================================
 
 ~ ---- 状态变量（数据段自动编址，各占 1 字）----
@@ -16,24 +17,34 @@ DIM B1 0;
 DIM B2 0;
 DIM B3 0;
 DIM SEED 1234567;
+DIM STRIKES 0;
+DIM BALLS 0;
+DIM PITCHN 0;
+DIM KEYB D11;
+DIM DUMB D2;
 
 ~ ---- 消息（ASCII，以 0 结尾）----
+DIM LM_BALL D7 32,66,65,76,76,10,0;        ~ " BALL\n"
+DIM LSTR D9 32,83,84,82,73,75,69,10,0;     ~ " STRIKE\n"
+DIM LMISS D7 32,77,73,83,83,10,0;          ~ " MISS\n"
+DIM LSINGLE D9 32,83,73,78,71,76,69,10,0;  ~ " SINGLE\n"
+DIM LDOUBLE D9 32,68,79,85,66,76,69,10,0;  ~ " DOUBLE\n"
+DIM LTRIPLE D9 32,84,82,73,80,76,69,10,0;  ~ " TRIPLE\n"
+DIM LHR D11 32,72,79,77,69,32,82,85,78,10,0; ~ " HOME RUN\n"
+DIM LSO D14 32,83,84,82,73,75,69,32,79,85,84,33,10,0; ~ " STRIKE OUT!\n"
+DIM LBB D7 32,87,65,76,75,10,0;            ~ " WALK\n"
 DIM T0 D24 62,62,32,82,69,86,69,82,83,69,32,40,48,45,50,41,32,60,60,10,0;
-DIM OM_OUT D12 83,84,82,73,75,69,47,79,85,84,0;
-DIM OM_1B D8 83,73,78,71,76,69,0;
-DIM OM_2B D8 68,79,85,66,76,69,0;
-DIM OM_3B D8 84,82,73,80,76,69,0;
-DIM OM_HR D12 72,79,77,69,32,82,85,78,33,0;
-DIM S1 D8 32,79,85,84,83,61,0;
-DIM S2 D8 32,82,85,78,83,61,0;
-DIM S3 D8 32,66,65,83,69,83,61,0;
+DIM INS D37 74,61,72,73,84,32,75,61,83,69,69,46,32,82,69,86,69,82,83,69,32,66,69,70,79,82,69,32,51,32,79,85,84,83,33,10,0;
+~ "J=HIT K=SEE. REVERSE BEFORE 3 OUTS!"
+DIM PM D13 74,61,72,73,84,32,75,61,83,69,69,63,0;  ~ "J=HIT K=SEE?"
+DIM S1 D8 32,79,85,84,83,61,0;               ~ " OUTS="
+DIM S2 D8 32,82,85,78,83,61,0;               ~ " RUNS="
+DIM LBCNT D4 32,66,61,0;                     ~ " B="
+DIM LSCNT D4 32,83,61,0;                     ~ " S="
+DIM S3 D8 32,66,65,83,69,83,61,0;            ~ " BASES="
 DIM S4 D3 10,0;
 DIM M_WIN D24 62,62,62,32,67,79,77,69,66,65,67,75,32,87,73,78,33,32,60,60,60,10,0;
 DIM M_LOSE D24 62,62,62,32,51,32,79,85,84,83,32,45,32,76,79,83,84,32,60,60,60,10,0;
-DIM SEEDIN D2;
-DIM HITP D6 72,73,84,63,32,0;   ~ "HIT? "
-DIM INS D36 80,82,69,83,83,32,69,78,84,69,82,32,61,32,72,73,84,33,32,82,69,86,69,82,83,69,32,84,79,32,87,73,78,33,10,0;
-~ "PRESS ENTER = HIT! REVERSE TO WIN!"
 
 ~ ---- 初始化：标题 + 说明 + 开局局面 ----
 LEA #11 T0
@@ -55,13 +66,63 @@ JA DO_LOSE
 CMP OUTS 3
 JE DO_LOSE
 
-CALL WAIT_HIT
-CALL ROLL
-CALL MAP_POWER
-CALL PRINT_OUT
-CALL APPLY_POWER
-CALL SHOW_SIT
+CALL PITCH_SEL
+CALL SHOW_COUNT
 
+LEA #11 PM
+MOV #10 13
+INT
+LEA #11 KEYB
+MOV #12 1
+MOV #10 14
+INT
+
+MOV #3 KEYB
+CMP #3 10
+JE ML_NE                ~ 直接回车：当作 SEE
+CALL DISCARD_BYTE       ~ 吞掉回车换行，避免污染下一球
+: ML_NE
+CMP PITCHN 1
+JE ML_STRIKE
+
+~ ---- 坏球 ----
+CMP #3 74
+JE ML_SWING_BALL
+CMP #3 106
+JE ML_SWING_BALL
+~ SEE：坏数+1
+MOV #1 BALLS
+INC #1
+MOV BALLS #1
+CALL CHK_WALK
+JMP MAIN_LOOP
+: ML_SWING_BALL
+MOV #1 STRIKES
+INC #1
+MOV STRIKES #1
+LEA #11 LMISS
+MOV #10 13
+INT
+CALL CHK_STRIKE_OUT
+CALL SHOW_SIT
+JMP MAIN_LOOP
+
+~ ---- 好球 ----
+: ML_STRIKE
+CMP #3 74
+JE ML_SWING_STR
+CMP #3 106
+JE ML_SWING_STR
+~ SEE：好数+1
+MOV #1 STRIKES
+INC #1
+MOV STRIKES #1
+CALL CHK_STRIKE_OUT
+CALL SHOW_SIT
+JMP MAIN_LOOP
+: ML_SWING_STR
+CALL SWING_HIT
+CALL SHOW_SIT
 JMP MAIN_LOOP
 
 ~ ---- 终局 ----
@@ -76,19 +137,33 @@ MOV #10 13
 INT
 HALT
 
-~ ---- 等待 HIT（打印提示，读 1 字节阻塞直到回车/任意键）----
-: WAIT_HIT
-LEA #11 HITP
+~ ---- 投球：#0 随机 -> PITCHN 0坏 1好（0..7 好 / 8..15 坏），并打印 ----
+: PITCH_SEL
+CALL ROLL16
+CMP #0 8
+JB PSS_STR
+MOV PITCHN 0
+LEA #11 LM_BALL
 MOV #10 13
 INT
-LEA #11 SEEDIN
+RET
+: PSS_STR
+MOV PITCHN 1
+LEA #11 LSTR
+MOV #10 13
+INT
+RET
+
+~ ---- 吞掉 1 字节（回车残留）----
+: DISCARD_BYTE
+LEA #11 DUMB
 MOV #12 1
 MOV #10 14
 INT
 RET
 
-~ ---- 掷骰：LCG 伪随机，返回 #0 = 0..12 ----
-: ROLL
+~ ---- 掷骰 0..12 ----
+: ROLL13
 MOV #2 SEED
 MUL #2 1103515245
 ADD #2 12345
@@ -96,83 +171,173 @@ MOV SEED #2
 SHR #2 8
 AND #2 65535
 MOV #3 #2
-DIV #3 13       ~ #0 = 余数(0..12)
+DIV #3 13
 RET
 
-~ ---- 结果映射：#0 -> #5 力量(0=OUT 1=1B 2=2B 3=3B 4=HR) ----
-: MAP_POWER
-CMP #0 6
-JB MP_OUT
+~ ---- 掷骰 0..15 ----
+: ROLL16
+MOV #2 SEED
+MUL #2 1103515245
+ADD #2 12345
+MOV SEED #2
+SHR #2 8
+AND #2 65535
+MOV #3 #2
+DIV #3 16
+RET
+
+~ ---- 挥棒击球：#5=1..4 单/二/三/轰，0=挥空，6=出局 ----
+: SWING_HIT
+CALL ROLL16
+CMP #0 3
+JB SW_MISS
 CMP #0 9
-JB MP_1B
-CMP #0 11
-JB MP_2B
-CMP #0 12
-JB MP_3B
-MOV #5 4
-JMP MP_DONE
-: MP_OUT
-MOV #5 0
-JMP MP_DONE
-: MP_1B
+JB SW_OUT
 MOV #5 1
-JMP MP_DONE
-: MP_2B
+CMP #0 12
+JB SW_HIT
 MOV #5 2
-JMP MP_DONE
-: MP_3B
+CMP #0 14
+JB SW_HIT
 MOV #5 3
-: MP_DONE
+CMP #0 15
+JB SW_HIT
+MOV #5 4
+JMP SW_HIT
+: SW_MISS
+MOV #1 STRIKES
+INC #1
+MOV STRIKES #1
+LEA #11 LMISS
+MOV #10 13
+INT
+CALL CHK_STRIKE_OUT
+RET
+: SW_OUT
+MOV #1 OUTS
+INC #1
+MOV OUTS #1
+LEA #11 LSO
+MOV #10 13
+INT
+CALL RESET_BC
+RET
+: SW_HIT
+CALL PRNT_SWING
+CALL APPLY_POWER
+CALL RESET_BC
 RET
 
-~ ---- 打印打席结果（按 #5）----
-: PRINT_OUT
+~ ---- 打印击球结果（按 #5 1..4）----
+: PRNT_SWING
 MOV #10 13
-CMP #5 0
-JE PO_OUT
 CMP #5 1
-JE PO_1B
+JE PS1B
 CMP #5 2
-JE PO_2B
+JE PS2B
 CMP #5 3
-JE PO_3B
-LEA #11 OM_HR
-JMP PO_GO
-: PO_OUT
-LEA #11 OM_OUT
-JMP PO_GO
-: PO_1B
-LEA #11 OM_1B
-JMP PO_GO
-: PO_2B
-LEA #11 OM_2B
-JMP PO_GO
-: PO_3B
-LEA #11 OM_3B
-: PO_GO
+JE PS3B
+LEA #11 LHR
+JMP PSGO
+: PS1B
+LEA #11 LSINGLE
+JMP PSGO
+: PS2B
+LEA #11 LDOUBLE
+JMP PSGO
+: PS3B
+LEA #11 LTRIPLE
+: PSGO
 INT
 RET
 
-~ ---- 应用打席结果（按 #5），#6/7/8=新垒 #9=本轮得分 ----
+~ ---- 三振检查（STRIKES>=3 -> 出局+归零）----
+: CHK_STRIKE_OUT
+CMP STRIKES 3
+JB CO_RET
+MOV #1 OUTS
+INC #1
+MOV OUTS #1
+LEA #11 LSO
+MOV #10 13
+INT
+CALL RESET_BC
+: CO_RET
+RET
+
+~ ---- 保送检查（BALLS>=4 -> 保送上垒+归零）----
+: CHK_WALK
+CMP BALLS 4
+JB CW_RET
+CALL APPLY_WALK
+LEA #11 LBB
+MOV #10 13
+INT
+CALL RESET_BC
+: CW_RET
+RET
+
+~ ---- 归零好/坏数 ----
+: RESET_BC
+MOV STRIKES 0
+MOV BALLS 0
+RET
+
+~ ---- 保送推进（新打者上一垒，推进被迫进垒）----
+: APPLY_WALK
+MOV #9 0
+CMP B1 0
+JE AW_PB
+CMP B2 0
+JE AW_PB2
+CMP B3 0
+JE AW_BOSS
+INC #9
+MOV #8 1
+MOV #7 1
+MOV #6 1
+JMP AW_WRITE
+: AW_BOSS
+MOV #8 1
+MOV #7 1
+MOV #6 1
+JMP AW_WRITE
+: AW_PB2
+MOV #8 B3
+MOV #7 1
+MOV #6 1
+JMP AW_WRITE
+: AW_PB
+MOV #8 B3
+MOV #7 B2
+MOV #6 1
+: AW_WRITE
+MOV B1 #6
+MOV B2 #7
+MOV B3 #8
+MOV #1 RUNS
+ADD #1 #9
+MOV RUNS #1
+RET
+
+~ ---- 应用安打结果（#5=1单 2双 3三 4轰），#6/7/8=新垒 #9=本轮得分 ----
 : APPLY_POWER
-CMP #5 0
-JE AP_OUT
 MOV #6 0
 MOV #7 0
 MOV #8 0
 MOV #9 0
 CMP B3 0
 JE AP_B2
-INC #9          ~ 三垒跑者必得分
+INC #9
 : AP_B2
 CMP B2 0
 JE AP_B1
 CMP #5 1
 JE AP_B2_3B
-INC #9          ~ 二垒跑者：P>=2 得分
+INC #9
 JMP AP_B1
 : AP_B2_3B
-MOV #8 1        ~ 二垒跑者单打推进三垒
+MOV #8 1
 : AP_B1
 CMP B1 0
 JE AP_BAT
@@ -180,7 +345,7 @@ CMP #5 1
 JE AP_B1_2B
 CMP #5 2
 JE AP_B1_3B
-INC #9          ~ 一垒跑者：P>=3 得分
+INC #9
 JMP AP_BAT
 : AP_B1_2B
 MOV #7 1
@@ -194,7 +359,7 @@ CMP #5 3
 JE AP_TRI
 CMP #5 2
 JE AP_DBL
-MOV #6 1        ~ 打者上一垒
+MOV #6 1
 JMP AP_WRITE
 : AP_DBL
 MOV #7 1
@@ -203,7 +368,7 @@ JMP AP_WRITE
 MOV #8 1
 JMP AP_WRITE
 : AP_HR
-INC #9          ~ 全垒打本垒得一分
+INC #9
 : AP_WRITE
 MOV B1 #6
 MOV B2 #7
@@ -212,10 +377,21 @@ MOV #1 RUNS
 ADD #1 #9
 MOV RUNS #1
 RET
-: AP_OUT
-MOV #1 OUTS
-INC #1
-MOV OUTS #1
+
+~ ---- 显示好/坏数：B=.. S=.. ----
+: SHOW_COUNT
+LEA #11 LBCNT
+MOV #10 13
+INT
+MOV #4 BALLS
+CALL PRINT_DIGIT
+LEA #11 LSCNT
+MOV #10 13
+INT
+MOV #4 STRIKES
+CALL PRINT_DIGIT
+MOV #10 13
+INT
 RET
 
 ~ ---- 展示局面：OUTS=.. RUNS=.. BASES=... ----
