@@ -10,3 +10,6 @@ dist/sysfun/*.co
 
 # 运行生成的日志目录（dump.log 等）
 dist/log/
+
+# Go coverage 原始数据（go test -cover 且未设 GOCOVERDIR 时落盘的构建产物）
+*.profraw
