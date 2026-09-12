@@ -1,5 +1,5 @@
 ~ ============================================
-~ ADVENTURE.cupa —— 文字冒险游戏（已验证版本）
+~ ADVENTURE.cupa —— 文字冒险游戏（已修复版本）
 ~ 
 ~ 游戏流程：
 ~   1. 显示开场剧情
@@ -11,6 +11,7 @@
 ~ 角色状态
 DIM HP 10;
 DIM GOLD 0;
+DIM STATUS 0;        ~ 游戏状态标志: 0=进行中, 1=胜利, -1=失败
 
 ~ 游戏状态
 DIM SCENE 1;
@@ -47,6 +48,7 @@ DIM INBUF D20
 ~ ========== 主程序初始化 ==========
 MOV HP 10
 MOV GOLD 0
+MOV STATUS 0
 MOV SCENE 1
 MOV GAMEOVER 0
 
@@ -137,7 +139,9 @@ SUB HP 3
 CMP HP 0
 JB HERO_DIED
 
+~ 战斗胜利
 ADD GOLD 20
+MOV STATUS 1         ~ 设置胜利标志
 MOV GAMEOVER 1
 JMP GAME_LOOP
 
@@ -146,11 +150,8 @@ MOV SCENE 1
 JMP GAME_LOOP
 
 : HERO_DIED
-MOV #11 138
-MOV #10 13
-INT
+MOV STATUS -1        ~ 设置失败标志
 MOV GAMEOVER 1
-MOV #0 0
 JMP GAME_LOOP
 
 ~ ========== 场景3：宝箱 ==========
@@ -177,8 +178,8 @@ JMP SCENE3
 
 : S3_OPEN
 ADD GOLD 50
+MOV STATUS 1         ~ 设置胜利标志
 MOV GAMEOVER 1
-MOV #0 1
 JMP GAME_LOOP
 
 : S3_LEAVE
@@ -187,29 +188,26 @@ JMP GAME_LOOP
 
 ~ ========== 游戏结束 ==========
 : END_GAME
-CMP #0 0
-JE LOSE_END
+CMP STATUS 1
+JE SHOW_WIN
 
+~ 失败结局
+MOV #11 188
+MOV #10 13
+INT
+
+JMP PRINT_GOLD
+
+: SHOW_WIN
 ~ 胜利结局
 MOV #11 171
 MOV #10 13
 INT
 
+: PRINT_GOLD
 MOV #0 GOLD
 CALL PRINT_NUM
 MOV #13 10
-JMP GAME_END
-
-: LOSE_END
-MOV #11 188
-MOV #10 13
-INT
-
-MOV #0 GOLD
-CALL PRINT_NUM
-MOV #13 10
-
-: GAME_END
 HALT
 END
 
