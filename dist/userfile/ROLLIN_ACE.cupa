@@ -107,8 +107,7 @@ INT
 ~ ---- 主循环 ----
 : MAIN_LOOP
 CMP RUNS OPP_SCORE
-JA DO_WIN
-JE DO_WIN
+JA DO_WIN              ~ 只有反超(>)才算赢，追平不算
 CMP OUTS 3
 JA DO_LOSE
 JE DO_LOSE
