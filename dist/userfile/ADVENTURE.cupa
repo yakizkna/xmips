@@ -81,13 +81,8 @@ MOV #11 70
 MOV #10 13
 INT
 
-~ 读入玩家选择
-MOV #11 250
-MOV #12 20
-MOV #10 14
-INT
-
-MOV #0 @#11
+~ 读入玩家选择（每次读 1 字节，跳过残留换行）
+CALL READ_CHOICE
 
 CMP #0 49
 JE S1_LEFT
@@ -118,13 +113,8 @@ MOV #11 100
 MOV #10 13
 INT
 
-~ 读入选择
-MOV #11 250
-MOV #12 20
-MOV #10 14
-INT
-
-MOV #0 @#11
+~ 读入选择（每次读 1 字节，跳过残留换行）
+CALL READ_CHOICE
 
 CMP #0 49
 JE S2_FIGHT
@@ -160,13 +150,8 @@ MOV #11 140
 MOV #10 13
 INT
 
-~ 读入选择
-MOV #11 250
-MOV #12 20
-MOV #10 14
-INT
-
-MOV #0 @#11
+~ 读入选择（每次读 1 字节，跳过残留换行）
+CALL READ_CHOICE
 
 CMP #0 49
 JE S3_OPEN
@@ -209,6 +194,20 @@ MOV #0 GOLD
 CALL PRINT_NUM
 MOV #13 10
 HALT
+
+~ ========== 读取单个选择字符（每次 1 字节，跳过残留换行） ==========
+: READ_CHOICE
+MOV #11 250
+MOV #12 1
+MOV #10 14
+INT
+MOV #0 @#11
+CMP #13 0
+JE RC_RET
+CMP #0 10
+JE READ_CHOICE
+: RC_RET
+RET
 
 ~ ========== 输出数字子程序 ==========
 : PRINT_NUM
