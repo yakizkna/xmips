@@ -1,13 +1,14 @@
 ~ ============================================================
-~ rollin-ace.cupa —— 九下追分（RA REVERSE）
+~ REVERSAL.cupa —— 九下追分（RA REVERSE）
 ~ 开局 0-2 落后，九下面临无人出局。
 ~ 每次打席掷骰：OUT x6 / 1B x3 / 2B x2 / 3B x1 / HR x1（共 13）
 ~ 每球更新垒况与比分；
 ~   3 出局          -> 失败
 ~   得分反超(>=3)   -> 逆转取胜
-~ 运行：xmips rollin-ace.cupa
-~   （默认固定随机种子；若要变种子，回车/任意键后自动开始，
-~     或 echo x | xmips rollin-ace.cupa 用首个字符做种子）
+~ 运行：xmips ROLLIN_ACE.cupa
+~   逐步推进：每局打印 HIT? 等待回车/任意键后掷一球并更新局面。
+~   （默认固定随机种子；若要变种子，先按任意键+回车用首字符做种子，
+~     或 echo x | xmips ROLLIN_ACE.cupa 用首个字符做种子）
 ~ ============================================================
 
 ~ ---- 状态变量（数据段自动编址，各占 1 字）----
@@ -32,6 +33,7 @@ DIM S4 D3 10,0;
 DIM M_WIN D24 62,62,62,32,67,79,77,69,66,65,67,75,32,87,73,78,33,32,60,60,60,10,0;
 DIM M_LOSE D24 62,62,62,32,51,32,79,85,84,83,32,45,32,76,79,83,84,32,60,60,60,10,0;
 DIM SEEDIN D2;
+DIM HITP D6 72,73,84,63,32,0;   ~ "HIT? "
 
 ~ ---- 初始化：打印标题 ----
 LEA #11 T0
@@ -59,6 +61,7 @@ JA DO_LOSE
 CMP OUTS 3
 JE DO_LOSE
 
+CALL WAIT_HIT
 CALL ROLL
 CALL MAP_POWER
 CALL PRINT_OUT
@@ -78,6 +81,17 @@ LEA #11 M_LOSE
 MOV #10 13
 INT
 HALT
+
+~ ---- 等待 HIT（打印提示，读 1 字节阻塞直到回车/任意键）----
+: WAIT_HIT
+LEA #11 HITP
+MOV #10 13
+INT
+LEA #11 SEEDIN
+MOV #12 1
+MOV #10 14
+INT
+RET
 
 ~ ---- 掷骰：LCG 伪随机，返回 #0 = 0..12 ----
 : ROLL
