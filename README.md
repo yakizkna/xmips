@@ -346,7 +346,7 @@ Xmips 通过 `CALL`/`RET` 支持子程序调用（无栈帧、无局部变量，
 51 40 22 17 16 13 5 4 3 2
 ```
 
-与上面 `BUBBLE_INT.cupa`（10 号系统调用）结果一致。更详细的约束见 [`USAGE.md`](USAGE.md) 的 5.1/5.2。
+与上面 `BUBBLE_INT.cupa`（10 号系统调用）结果一致。更详细的约束见 [`USAGE.md`](doc/USAGE.md) 的 5.1/5.2。
 
 ### 系统调用一览
 
@@ -520,8 +520,9 @@ xmips/
 │   ├── run.list            # 运行列表文件
 │   ├── userfile/           # 用户程序目录
 │   └── sysfun/             # 系统函数库目录（用户不可修改）
-├── USAGE.md                # 运行与参数说明
-├── IO_SYSCALL_SPEC.md      # 文件/Socket 系统调用规格
+├── doc/
+│   ├── USAGE.md            # 运行与参数说明
+│   └── IO_SYSCALL_SPEC.md  # 文件/Socket 系统调用规格
 └── tools/                  # 辅助工具（如 md5gen）
 ```
 
@@ -574,7 +575,7 @@ config.ini 格式要求：每行 `key=value`（无空格），以 `end` 结尾�
 
 ### 6.3 运行 xmips
 
-编译并运行方式（详见 [`USAGE.md`](USAGE.md)）：
+编译并运行方式（详见 [`USAGE.md`](doc/USAGE.md)）：
 
 ```
 ./tool.sh build       # 1. 编译；把 xmips 安装到 /usr/local/bin/xmips，dist/* 同步到 ~/.xmips/，重建系统函数库
