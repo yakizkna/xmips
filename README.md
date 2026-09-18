@@ -1,5 +1,7 @@
 # 一个用软件实现的模拟指令系统及其汇编语言 —— Xmips 指令系统与 cupa 汇编语言
 
+> **Language / 语言**: [中文](README.md) · [English](README.en.md)
+
 ## 目录
 
 - [一、概述](#一概述)
